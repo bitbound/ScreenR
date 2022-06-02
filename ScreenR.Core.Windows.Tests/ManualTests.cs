@@ -1,7 +1,12 @@
+#nullable disable
 using Microsoft.Extensions.Logging;
 using ScreenR.Core.Models;
 using SkiaSharp;
+using SkiaSharp.Views.Desktop;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Reflection;
 
 namespace ScreenR.Core.Windows.Tests
 {
@@ -9,12 +14,205 @@ namespace ScreenR.Core.Windows.Tests
     //[Ignore("Manual")]
     public class ManualTests
     {
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        private LoggerFactory _factory;
-        private ILogger<ScreenGrabberWindows> _logger;
-        private ScreenGrabberWindows _grabber;
         private IEnumerable<DisplayInfo> _displays;
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+        private ImageHelper _imageHelper;
+        private LoggerFactory _factory;
+        private ScreenGrabberWindows _grabber;
+        private ILogger<ScreenGrabberWindows> _logger;
+
+
+        [TestMethod]
+        public void CaptureAndEncodeSpeedTest()
+        {
+            var display = _displays.First();
+            var iterations = 30;
+            var quality = 80;
+            var sw = Stopwatch.StartNew();
+
+            SKBitmap currentFrame = new();
+            SKBitmap previousFrame = new();
+
+            for (var i = 0; i < iterations; i++)
+            {
+                previousFrame?.Dispose();
+                previousFrame = currentFrame.Copy();
+                currentFrame.Dispose();
+
+                currentFrame = _grabber.GetScreenGrab(display.Name).Value;
+                var diffArea = _imageHelper.GetDiffArea(currentFrame, previousFrame);
+                using var cropped = _imageHelper.CropBitmap(currentFrame, diffArea);
+                using var skData = cropped.Encode(SKEncodedImageFormat.Webp, quality);
+            }
+            sw.Stop();
+            Console.WriteLine($"ScreenGrab & WEBP: {GetAverage(sw, iterations)}ms per iteration");
+
+            sw.Restart();
+            for (var i = 0; i < iterations; i++)
+            {
+                previousFrame.Dispose();
+                previousFrame = currentFrame.Copy();
+                currentFrame.Dispose();
+
+                currentFrame = _grabber.GetScreenGrab(display.Name).Value;
+                var diffArea = _imageHelper.GetDiffArea(currentFrame, previousFrame);
+                using var cropped = _imageHelper.CropBitmap(currentFrame, diffArea);
+                using var skData = cropped.Encode(SKEncodedImageFormat.Jpeg, quality);
+            }
+            sw.Stop();
+            Console.WriteLine($"ScreenGrab & JPEG: {GetAverage(sw, iterations)}ms per iteration");
+        }
+
+        [TestMethod]
+        public void CaptureSpeedTest()
+        {
+            var display = _displays.First();
+            var iterations = 30;
+            var sw = Stopwatch.StartNew();
+
+            for (var i = 0; i < iterations; i++)
+            {
+                using var bitmap = _grabber.GetScreenGrab(display.Name).Value;
+            }
+
+            sw.Stop();
+
+            Console.WriteLine($"ScreenGrab: {GetAverage(sw, iterations)}ms per capture");
+
+
+
+            sw.Restart();
+
+            for (var i = 0; i < iterations; i++)
+            {
+                using var bitmap = _grabber.GetDirectXGrab(display).Value;
+            }
+
+            sw.Stop();
+
+            Console.WriteLine($"DirectX: {GetAverage(sw, iterations)}ms per capture");
+
+
+
+            sw.Restart();
+
+            for (var i = 0; i < iterations; i++)
+            {
+                using var bitmap = _grabber.GetBitBltGrab(display).Value;
+            }
+
+            sw.Stop();
+
+            Console.WriteLine($"BitBlt: {GetAverage(sw, iterations)}ms per capture");
+
+
+
+            sw.Restart();
+
+            for (var i = 0; i < iterations; i++)
+            {
+                using var bitmap = _grabber.GetWinFormsGrab(display).Value;
+            }
+
+            sw.Stop();
+
+            Console.WriteLine($"WinForms: {GetAverage(sw, iterations)}ms per capture");
+        }
+
+        [TestMethod]
+        public void DiffSpeedTests()
+        {
+            using var bitmap1 = GetImage("Image1.png");
+            using var bitmap2 = GetImage("Image2.png");
+            var iterations = 60;
+
+
+            var sw = Stopwatch.StartNew();
+            for (var i = 0; i < iterations; i++)
+            {
+                _ = _imageHelper.GetDiffArea(bitmap1, bitmap2);
+            }
+            sw.Stop();
+            Console.WriteLine($"Diff Area: {GetAverage(sw, iterations)}ms per call");
+
+
+            sw.Restart();
+            for (var i = 0; i < iterations; i++)
+            {
+                using var imageDiff = _imageHelper.GetImageDiff(bitmap1, bitmap2).Value;
+            }
+            sw.Stop();
+            Console.WriteLine($"Image Diff: {GetAverage(sw, iterations)}ms per call");
+        }
+
+        [TestMethod]
+        public void EncodeSpeedTest()
+        {
+            using var skBitmap = GetImage("Image1.png");
+            var quality = 75;
+            var iterations = 30;
+
+            {
+                using var skData = skBitmap.Encode(SKEncodedImageFormat.Jpeg, quality);
+                Console.WriteLine($"JPEG size: {skData.Size:N0}");
+            }
+
+            var sw = Stopwatch.StartNew();
+            for (var i = 0; i < iterations; i++)
+            {
+                using var skData = skBitmap.Encode(SKEncodedImageFormat.Jpeg, quality);
+            }
+            sw.Stop();
+            Console.WriteLine($"JPEG: {GetAverage(sw, iterations)}ms per encode");
+
+
+            {
+                using var skData = skBitmap.Encode(SKEncodedImageFormat.Png, quality);
+                Console.WriteLine($"PNG size: {skData.Size:N0}");
+            }
+            sw.Restart();
+            for (var i = 0; i < iterations; i++)
+            {
+                using var skData = skBitmap.Encode(SKEncodedImageFormat.Png, quality);
+            }
+            sw.Stop();
+            Console.WriteLine($"PNG: {GetAverage(sw, iterations)}ms per encode");
+
+
+            {
+                using var skData = skBitmap.Encode(SKEncodedImageFormat.Webp, quality);
+                Console.WriteLine($"WEBP size: {skData.Size:N0}");
+            }
+            sw.Restart();
+            for (var i = 0; i < iterations; i++)
+            {
+                using var skData = skBitmap.Encode(SKEncodedImageFormat.Webp, quality);
+            }
+            sw.Stop();
+            Console.WriteLine($"WEBP: {GetAverage(sw, iterations)}ms per encode");
+        }
+
+        [TestMethod]
+        public void GetDiffAreaTest()
+        {
+            using var bitmap1 = GetImage("Image1.png");
+            using var bitmap2 = GetImage("Image2.png");
+
+            var diffArea = _imageHelper.GetDiffArea(bitmap1, bitmap2);
+            using var cropped = _imageHelper.CropBitmap(bitmap2, diffArea);
+
+            SaveFile(cropped, "Test.webp");
+        }
+
+        [TestMethod]
+        public void GetImageDiffTest()
+        {
+            using var bitmap1 = GetImage("Image1.png");
+            using var bitmap2 = GetImage("Image2.png");
+
+            var diff = _imageHelper.GetImageDiff(bitmap1, bitmap2);
+
+            SaveFile(diff.Value, "Test.webp");
+        }
 
         [TestInitialize]
         public void Init()
@@ -23,72 +221,43 @@ namespace ScreenR.Core.Windows.Tests
             _logger = _factory.CreateLogger<ScreenGrabberWindows>();
             _grabber = new ScreenGrabberWindows(_logger);
             _displays = _grabber.GetDisplays();
+            _imageHelper = new ImageHelper(_factory.CreateLogger<ImageHelper>());
         }
 
         [TestMethod]
         public void SaveFileTest()
         {
-            var bitmap = _grabber.GetScreenGrab(_displays.First().Name);
+            var result = _grabber.GetScreenGrab(_displays.First().Name);
 
-            var savePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Test.jpg");
-            using var fs = new FileStream(savePath, FileMode.Create);
-            bitmap.Value.Encode(fs, SKEncodedImageFormat.Jpeg, 80);
+            if (result.Value is null)
+            {
+                throw new ArgumentNullException(nameof(result.Value));
+            }
+
+            SaveFile(result.Value, "Test.jpg", SKEncodedImageFormat.Jpeg);
         }
 
-        [TestMethod]
-        public void CaptureSpeedTest()
+        private static SKBitmap GetImage(string frameFileName)
         {
-            var display = _displays.First();
+            using var mrs = Assembly.GetExecutingAssembly().GetManifestResourceStream($"ScreenR.Core.Windows.Tests.Resources.{frameFileName}");
+            using var resourceImage = (Bitmap)Image.FromStream(mrs);
+            return resourceImage.ToSKBitmap();
+        }
 
-            var sw = Stopwatch.StartNew();
+        private static void SaveFile(
+            SKBitmap bitmap,
+            string fileName,
+            SKEncodedImageFormat format = SKEncodedImageFormat.Webp,
+            int quality = 80)
+        {
+            var savePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), fileName);
+            using var fs = new FileStream(savePath, FileMode.Create);
+            bitmap.Encode(fs, format, quality);
+        }
 
-            for (var i = 0; i < 60; i++)
-            {
-                using var bitmap = _grabber.GetScreenGrab(display.Name).Value;
-            }
-
-            sw.Stop();
-
-            Console.WriteLine($"ScreenGrab Time: {sw.Elapsed.TotalMilliseconds}ms");
-
-
-
-            sw.Restart();
-
-            for (var i = 0; i < 60; i++)
-            {
-                using var bitmap = _grabber.GetDirectXGrab(display).Value;
-            }
-
-            sw.Stop();
-
-            Console.WriteLine($"DirectX Time: {sw.Elapsed.TotalMilliseconds}ms");
-
-
-
-            sw.Restart();
-
-            for (var i = 0; i < 60; i++)
-            {
-                using var bitmap = _grabber.GetBitBltGrab(display).Value;
-            }
-
-            sw.Stop();
-
-            Console.WriteLine($"BitBlt Time: {sw.Elapsed.TotalMilliseconds}ms");
-
-
-
-            sw.Restart();
-
-            for (var i = 0; i < 60; i++)
-            {
-                using var bitmap = _grabber.GetWinFormsGrab(display).Value;
-            }
-
-            sw.Stop();
-
-            Console.WriteLine($"WinForms Time: {sw.Elapsed.TotalMilliseconds}ms");
+        private double GetAverage(Stopwatch sw, int iterations)
+        {
+            return Math.Round(sw.Elapsed.TotalMilliseconds / iterations, 2);
         }
     }
 }
