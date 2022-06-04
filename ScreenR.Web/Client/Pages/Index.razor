@@ -1,0 +1,12 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<AuthorizeView>
+    <NotAuthorized>
+        <SplashScreen />
+    </NotAuthorized>
+    <Authorized>
+        You're logged in.  Congrats, mate.
+    </Authorized>
+</AuthorizeView>

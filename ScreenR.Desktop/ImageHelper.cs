@@ -11,8 +11,8 @@ namespace ScreenR.Core
     public interface IImageHelper
     {
         SKBitmap CropBitmap(SKBitmap bitmap, SKRect cropArea);
-        SKRect GetDiffArea(SKBitmap currentFrame, SKBitmap? previousFrame);
-        Result<SKBitmap> GetImageDiff(SKBitmap currentFrame, SKBitmap? previousFrame);
+        SKRect GetDiffArea(SKBitmap currentFrame, SKBitmap? previousFrame, bool forceFullscreen = false);
+        Result<SKBitmap> GetImageDiff(SKBitmap currentFrame, SKBitmap? previousFrame, bool forceFullscreen = false);
     }
 
     public class ImageHelper : IImageHelper
@@ -35,7 +35,7 @@ namespace ScreenR.Core
             return cropped;
         }
 
-        public Result<SKBitmap> GetImageDiff(SKBitmap currentFrame, SKBitmap? previousFrame)
+        public Result<SKBitmap> GetImageDiff(SKBitmap currentFrame, SKBitmap? previousFrame, bool forceFullscreen = false)
         {
             try
             {
@@ -44,7 +44,7 @@ namespace ScreenR.Core
                     return Result.Fail<SKBitmap>("Current frame cannot be null.");
                 }
 
-                if (previousFrame is null)
+                if (previousFrame is null || forceFullscreen)
                 {
                     return Result.Ok(currentFrame.Copy());
                 }
@@ -111,7 +111,7 @@ namespace ScreenR.Core
                 return Result.Fail<SKBitmap>(ex);
             }
         }
-        public SKRect GetDiffArea(SKBitmap currentFrame, SKBitmap? previousFrame)
+        public SKRect GetDiffArea(SKBitmap currentFrame, SKBitmap? previousFrame, bool forceFullscreen = false)
         {
             try
             {
@@ -120,7 +120,7 @@ namespace ScreenR.Core
                     return SKRect.Empty;
                 }
 
-                if (previousFrame is null)
+                if (previousFrame is null || forceFullscreen)
                 {
                     return currentFrame.ToRectangle();
                 }
@@ -186,10 +186,10 @@ namespace ScreenR.Core
                     // Check for valid bounding box.
                     if (left <= right && top <= bottom)
                     {
-                        //left = Math.Max(left - 2, 0);
-                        //top = Math.Max(top - 2, 0);
-                        //right = Math.Min(right + 2, width);
-                        //bottom = Math.Min(bottom + 2, height);
+                        left = Math.Max(left - 2, 0);
+                        top = Math.Max(top - 2, 0);
+                        right = Math.Min(right + 2, width);
+                        bottom = Math.Min(bottom + 2, height);
 
                         return new SKRect(left, top, right, bottom);
                     }
