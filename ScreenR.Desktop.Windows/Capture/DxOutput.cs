@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Core.Windows
+namespace ScreenR.Desktop.Windows.Capture
 {
     public class DxOutput : IDisposable
     {

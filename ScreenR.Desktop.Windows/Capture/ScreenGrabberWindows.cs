@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.IO;
 using PInvoke;
+using ScreenR.Core;
 using ScreenR.Core.Interfaces;
 using ScreenR.Core.Models;
 using SharpDX.Direct3D11;
@@ -13,7 +14,7 @@ using Device = SharpDX.Direct3D11.Device;
 using MapFlags = SharpDX.Direct3D11.MapFlags;
 using Resource = SharpDX.DXGI.Resource;
 
-namespace ScreenR.Core.Windows
+namespace ScreenR.Desktop.Windows.Capture
 {
     public class ScreenGrabberWindows : IScreenGrabber
     {
@@ -217,7 +218,7 @@ namespace ScreenR.Core.Windows
                     {
                         try
                         {
-                            var device = new SharpDX.Direct3D11.Device(adapter);
+                            var device = new Device(adapter);
                             var output1 = output.QueryInterface<Output1>();
 
                             var bounds = output1.Description.DesktopBounds;
@@ -285,7 +286,7 @@ namespace ScreenR.Core.Windows
                     {
                         for (var column = 0; column < width; column++)
                         {
-                            var index = (row * width * bytesPerPixel) + (column * bytesPerPixel);
+                            var index = row * width * bytesPerPixel + column * bytesPerPixel;
 
                             byte* data = scan + index;
 
