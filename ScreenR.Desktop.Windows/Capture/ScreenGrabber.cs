@@ -16,13 +16,13 @@ using Resource = SharpDX.DXGI.Resource;
 
 namespace ScreenR.Desktop.Windows.Capture
 {
-    public class ScreenGrabberWindows : IScreenGrabber
+    public class ScreenGrabber : IScreenGrabber
     {
         private readonly List<DisplayInfo> _displays = new();
         private readonly Dictionary<string, DxOutput> _dxOutputs = new();
-        private readonly ILogger<ScreenGrabberWindows> _logger;
+        private readonly ILogger<ScreenGrabber> _logger;
         private readonly RecyclableMemoryStreamManager _streamManager = new();
-        public ScreenGrabberWindows(ILogger<ScreenGrabberWindows> logger)
+        public ScreenGrabber(ILogger<ScreenGrabber> logger)
         {
             _logger = logger;
             InitDirectX();

@@ -17,10 +17,28 @@ namespace ScreenR.Core.Windows.Tests
     {
         private IEnumerable<DisplayInfo> _displays;
         private ImageHelper _imageHelper;
+        private ScreenRecorder _recorder;
         private LoggerFactory _factory;
-        private ScreenGrabberWindows _grabber;
-        private ILogger<ScreenGrabberWindows> _logger;
+        private ScreenGrabber _grabber;
+        private ILogger<ScreenGrabber> _logger;
 
+        [TestMethod]
+        public async Task ScreenRecorderTest()
+        {
+            var cts = new CancellationTokenSource();
+            var token = cts.Token;
+            var display = _displays.First();
+            var savePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "test.mp4");
+            using var fs = new FileStream(savePath, FileMode.Create);
+
+            var recordTask = Task.Run(async () => await _recorder.CaptureVideo(display, 15, fs, token));
+
+            await Task.Delay(3_000);
+
+            cts.Cancel();
+
+            await recordTask;
+        }
 
         [TestMethod]
         public void CaptureAndEncodeSpeedTest()
@@ -219,10 +237,11 @@ namespace ScreenR.Core.Windows.Tests
         public void Init()
         {
             _factory = new LoggerFactory();
-            _logger = _factory.CreateLogger<ScreenGrabberWindows>();
-            _grabber = new ScreenGrabberWindows(_logger);
+            _logger = _factory.CreateLogger<ScreenGrabber>();
+            _grabber = new ScreenGrabber(_logger);
             _displays = _grabber.GetDisplays();
             _imageHelper = new ImageHelper(_factory.CreateLogger<ImageHelper>());
+            _recorder = new ScreenRecorder(_grabber);
         }
 
         [TestMethod]
