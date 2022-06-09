@@ -1,0 +1,38 @@
+﻿@using System.Drawing
+@using System.Diagnostics
+@inject IJSRuntime JsRuntime
+
+<div>
+    <canvas @ref="_canvasRef" width="_canvasWidth" height="_canvasHeight" />
+</div>
+
+
+@code {
+    private double _canvasWidth = 1920;
+    private double _canvasHeight = 1080;
+
+    private ElementReference _canvasRef;
+    private IJSObjectReference? _module;
+
+    private async Task SendImage(byte[] imageBytes, Rectangle destinationArea)
+    {
+        if (_module is null)
+        {
+            return;
+        }
+
+        await _module.InvokeVoidAsync("drawImage", _canvasRef, imageBytes, destinationArea);
+
+        //var unmod = (IJSUnmarshalledObjectReference)_module;
+        //unmod.InvokeUnmarshalled<ElementReference, byte[], Rectangle, int>("drawImage", _canvasRef, _imageBytes, area);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (_module is null)
+        {
+             _module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/RemoteDesktop.razor.js");
+        }
+    }
+}
