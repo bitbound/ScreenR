@@ -1,12 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
-using ScreenR.Core.Extensions;
+using ScreenR.Desktop.Core.Extensions;
 using SkiaSharp;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.Versioning;
 
-namespace ScreenR.Core
+namespace ScreenR.Desktop.Core
 {
     public interface IImageHelper
     {

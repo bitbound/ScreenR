@@ -1,6 +1,6 @@
-﻿using ScreenR.Core;
-using ScreenR.Core.Interfaces;
-using ScreenR.Core.Models;
+﻿using ScreenR.Desktop.Core;
+using ScreenR.Desktop.Core.Interfaces;
+using ScreenR.Desktop.Core.Models;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -42,7 +42,7 @@ namespace ScreenR.Desktop.Windows.Capture
             try
             {
 
-                var captureArea = new Rectangle(Point.Empty, display.Bounds.Size);
+                var captureArea = new Rectangle(Point.Empty, display.MonitorArea.Size);
 
                 var evenWidth = captureArea.Width % 2 == 0 ? (uint)captureArea.Width : (uint)captureArea.Width + 1;
                 var evenHeight = captureArea.Height % 2 == 0 ? (uint)captureArea.Height : (uint)captureArea.Height + 1;
@@ -78,11 +78,11 @@ namespace ScreenR.Desktop.Windows.Capture
                         return;
                     }
 
-                    var result = _grabber.GetScreenGrab(display.Name);
+                    var result = _grabber.GetScreenGrab(display.DeviceName);
 
                     while (!result.IsSuccess || result.Value is null)
                     {
-                        result = _grabber.GetScreenGrab(display.Name);
+                        result = _grabber.GetScreenGrab(display.DeviceName);
                     }
 
                     using var currentFrame = result.Value;

@@ -1,4 +1,4 @@
-﻿using ScreenR.Core.Models;
+﻿using ScreenR.Desktop.Core.Models;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Core.Interfaces
+namespace ScreenR.Desktop.Core.Interfaces
 {
     public interface IScreenGrabber
     {

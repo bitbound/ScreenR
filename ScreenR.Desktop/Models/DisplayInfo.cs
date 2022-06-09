@@ -1,12 +1,15 @@
 ﻿using System.Drawing;
+using System.Numerics;
 
-namespace ScreenR.Core.Models
+namespace ScreenR.Desktop.Core.Models
 {
     public class DisplayInfo
     {
-        public int BitsPerPixel { get; set; }
-        public Rectangle Bounds { get; set; }
-        public string Name { get; set; } = string.Empty;
         public bool IsPrimary { get; set; }
+        public Vector2 ScreenSize { get; set; }
+        public Rectangle MonitorArea { get; set; }
+        public Rectangle WorkArea { get; set; }
+        public string DeviceName { get; set; } = string.Empty;
+        public IntPtr Hmon { get; set; }
     }
 }

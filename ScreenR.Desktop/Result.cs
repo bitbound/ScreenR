@@ -1,4 +1,4 @@
-﻿namespace ScreenR.Core
+﻿namespace ScreenR.Desktop.Core
 {
     public class Result
     {

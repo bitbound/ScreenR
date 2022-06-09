@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ScreenR.Desktop\ScreenR.Desktop.csproj" />
+    <ProjectReference Include="..\ScreenR.Desktop\ScreenR.Desktop.Core.csproj" />
   </ItemGroup>
 
 </Project>

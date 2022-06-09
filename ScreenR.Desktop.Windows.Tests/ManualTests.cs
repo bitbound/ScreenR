@@ -1,6 +1,7 @@
 #nullable disable
 using Microsoft.Extensions.Logging;
-using ScreenR.Core.Models;
+using ScreenR.Desktop.Core;
+using ScreenR.Desktop.Core.Models;
 using ScreenR.Desktop.Windows.Capture;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
@@ -9,7 +10,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Reflection;
 
-namespace ScreenR.Core.Windows.Tests
+namespace ScreenR.Desktop.Windows.Tests
 {
     [TestClass]
     [Ignore("Manual")]
@@ -57,7 +58,7 @@ namespace ScreenR.Core.Windows.Tests
                 previousFrame = currentFrame.Copy();
                 currentFrame.Dispose();
 
-                currentFrame = _grabber.GetScreenGrab(display.Name).Value;
+                currentFrame = _grabber.GetScreenGrab(display.DeviceName).Value;
                 var diffArea = _imageHelper.GetDiffArea(currentFrame, previousFrame);
                 using var cropped = _imageHelper.CropBitmap(currentFrame, diffArea);
                 using var skData = cropped.Encode(SKEncodedImageFormat.Webp, quality);
@@ -72,7 +73,7 @@ namespace ScreenR.Core.Windows.Tests
                 previousFrame = currentFrame.Copy();
                 currentFrame.Dispose();
 
-                currentFrame = _grabber.GetScreenGrab(display.Name).Value;
+                currentFrame = _grabber.GetScreenGrab(display.DeviceName).Value;
                 var diffArea = _imageHelper.GetDiffArea(currentFrame, previousFrame);
                 using var cropped = _imageHelper.CropBitmap(currentFrame, diffArea);
                 using var skData = cropped.Encode(SKEncodedImageFormat.Jpeg, quality);
@@ -90,7 +91,7 @@ namespace ScreenR.Core.Windows.Tests
 
             for (var i = 0; i < iterations; i++)
             {
-                using var bitmap = _grabber.GetScreenGrab(display.Name).Value;
+                using var bitmap = _grabber.GetScreenGrab(display.DeviceName).Value;
             }
 
             sw.Stop();
@@ -247,7 +248,7 @@ namespace ScreenR.Core.Windows.Tests
         [TestMethod]
         public void SaveFileTest()
         {
-            var result = _grabber.GetScreenGrab(_displays.First().Name);
+            var result = _grabber.GetScreenGrab(_displays.First().DeviceName);
 
             if (result.Value is null)
             {

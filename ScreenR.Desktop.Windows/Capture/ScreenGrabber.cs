@@ -1,9 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.IO;
 using PInvoke;
-using ScreenR.Core;
-using ScreenR.Core.Interfaces;
-using ScreenR.Core.Models;
+using ScreenR.Desktop.Core;
+using ScreenR.Desktop.Core.Interfaces;
+using ScreenR.Desktop.Core.Models;
+using ScreenR.Desktop.Windows.Helpers;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using SkiaSharp;
@@ -12,7 +13,6 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Device = SharpDX.Direct3D11.Device;
 using MapFlags = SharpDX.Direct3D11.MapFlags;
-using Resource = SharpDX.DXGI.Resource;
 
 namespace ScreenR.Desktop.Windows.Capture
 {
@@ -32,15 +32,7 @@ namespace ScreenR.Desktop.Windows.Capture
         {
             if (!_displays.Any())
             {
-                var displays = Screen.AllScreens
-                    .Select(x => new DisplayInfo()
-                    {
-                        Name = x.DeviceName,
-                        Bounds = x.Bounds,
-                        IsPrimary = x.Primary,
-                        BitsPerPixel = x.BitsPerPixel
-                    });
-
+                var displays = DisplaysEnumerationHelper.GetDisplays();
                 _displays.AddRange(displays);
             }
             return _displays.ToArray();
@@ -50,7 +42,7 @@ namespace ScreenR.Desktop.Windows.Capture
         {
             try
             {
-                var display = GetDisplays().FirstOrDefault(x => x.Name == outputName);
+                var display = GetDisplays().FirstOrDefault(x => x.DeviceName == outputName);
 
                 if (display is null)
                 {
@@ -89,7 +81,7 @@ namespace ScreenR.Desktop.Windows.Capture
             {
                 hwnd = User32.GetDesktopWindow();
                 screenDc = User32.GetWindowDC(hwnd);
-                var bitmap = new Bitmap(display.Bounds.Width, display.Bounds.Height);
+                var bitmap = new Bitmap(display.MonitorArea.Width, display.MonitorArea.Height);
                 using var graphics = Graphics.FromImage(bitmap);
                 var targetDc = graphics.GetHdc();
                 Gdi32.BitBlt(targetDc, 0, 0, bitmap.Width, bitmap.Height,
@@ -112,7 +104,7 @@ namespace ScreenR.Desktop.Windows.Capture
 
         internal Result<Bitmap> GetDirectXGrab(DisplayInfo display)
         {
-            if (!_dxOutputs.TryGetValue(display.Name, out var dxOutput))
+            if (!_dxOutputs.TryGetValue(display.DeviceName, out var dxOutput))
             {
                 return Result.Fail<Bitmap>("DirectX output not found.");
             }
@@ -180,7 +172,7 @@ namespace ScreenR.Desktop.Windows.Capture
         {
             try
             {
-                var bitmap = new Bitmap(display.Bounds.Width, display.Bounds.Height);
+                var bitmap = new Bitmap(display.MonitorArea.Width, display.MonitorArea.Height);
                 using var graphics = Graphics.FromImage(bitmap);
                 graphics.CopyFromScreen(Point.Empty, Point.Empty, bitmap.Size);
                 return Result.Ok(bitmap);

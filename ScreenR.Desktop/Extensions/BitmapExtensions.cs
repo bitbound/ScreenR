@@ -1,7 +1,7 @@
 ﻿using SkiaSharp;
 using System.Drawing;
 
-namespace ScreenR.Core.Extensions
+namespace ScreenR.Desktop.Core.Extensions
 {
     public static class BitmapExtensions
     {
