@@ -15,6 +15,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenR.Web.Client", "Scree
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenR.Web.Shared", "ScreenR.Web\Shared\ScreenR.Web.Shared.csproj", "{AA668938-9B32-4F16-875C-5BA9900C76BE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScreenR.Service", "ScreenR.Service\ScreenR.Service.csproj", "{A650795E-A30A-428D-92A2-BC99EEC6AA81}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{AA668938-9B32-4F16-875C-5BA9900C76BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA668938-9B32-4F16-875C-5BA9900C76BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA668938-9B32-4F16-875C-5BA9900C76BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A650795E-A30A-428D-92A2-BC99EEC6AA81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A650795E-A30A-428D-92A2-BC99EEC6AA81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A650795E-A30A-428D-92A2-BC99EEC6AA81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A650795E-A30A-428D-92A2-BC99EEC6AA81}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

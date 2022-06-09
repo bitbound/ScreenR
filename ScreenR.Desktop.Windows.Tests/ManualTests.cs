@@ -12,7 +12,7 @@ using System.Reflection;
 namespace ScreenR.Core.Windows.Tests
 {
     [TestClass]
-    //[Ignore("Manual")]
+    [Ignore("Manual")]
     public class ManualTests
     {
         private IEnumerable<DisplayInfo> _displays;
