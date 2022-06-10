@@ -38,10 +38,10 @@ namespace ScreenR.Desktop.Windows.Helpers
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
         {
-            public int left;
-            public int top;
-            public int right;
-            public int bottom;
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
         }
 
         private const int CCHDEVICENAME = 32;
@@ -76,9 +76,9 @@ namespace ScreenR.Desktop.Windows.Helpers
                     {
                         var info = new DisplayInfo
                         {
-                            ScreenSize = new Vector2(mi.Monitor.right - mi.Monitor.left, mi.Monitor.bottom - mi.Monitor.top),
-                            MonitorArea = new Rectangle(mi.Monitor.left, mi.Monitor.top, mi.Monitor.right - mi.Monitor.left, mi.Monitor.bottom - mi.Monitor.top),
-                            WorkArea = new Rectangle(mi.WorkArea.left, mi.WorkArea.top, mi.WorkArea.right - mi.WorkArea.left, mi.WorkArea.bottom - mi.WorkArea.top),
+                            ScreenSize = new Vector2(mi.Monitor.Right - mi.Monitor.Left, mi.Monitor.Bottom - mi.Monitor.Top),
+                            MonitorArea = new Rectangle(mi.Monitor.Left, mi.Monitor.Top, mi.Monitor.Right - mi.Monitor.Left, mi.Monitor.Bottom - mi.Monitor.Top),
+                            WorkArea = new Rectangle(mi.WorkArea.Left, mi.WorkArea.Top, mi.WorkArea.Right - mi.WorkArea.Left, mi.WorkArea.Bottom - mi.WorkArea.Top),
                             IsPrimary = mi.Flags > 0,
                             Hmon = hMonitor,
                             DeviceName = mi.DeviceName

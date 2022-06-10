@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\ScreenR.Shared\ScreenR.Shared.csproj" />
     <ProjectReference Include="..\Shared\ScreenR.Web.Shared.csproj" />
   </ItemGroup>
 

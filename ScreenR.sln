@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32519.379
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenR.Desktop.Core", "ScreenR.Desktop\ScreenR.Desktop.Core.csproj", "{9F75C75A-8444-4946-8554-75BFB166BD02}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenR.Desktop.Core", "ScreenR.Desktop.Core\ScreenR.Desktop.Core.csproj", "{9F75C75A-8444-4946-8554-75BFB166BD02}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenR.Desktop.Windows", "ScreenR.Desktop.Windows\ScreenR.Desktop.Windows.csproj", "{23DDFBA1-0B0A-4B6F-AC22-4A93DB9017FB}"
 EndProject
@@ -16,6 +16,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenR.Web.Shared", "ScreenR.Web\Shared\ScreenR.Web.Shared.csproj", "{AA668938-9B32-4F16-875C-5BA9900C76BE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScreenR.Service", "ScreenR.Service\ScreenR.Service.csproj", "{A650795E-A30A-428D-92A2-BC99EEC6AA81}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScreenR.Shared", "ScreenR.Shared\ScreenR.Shared.csproj", "{215202B9-CB0C-41B4-9FB8-2C4B305E2C5F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,10 @@ Global
 		{A650795E-A30A-428D-92A2-BC99EEC6AA81}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A650795E-A30A-428D-92A2-BC99EEC6AA81}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A650795E-A30A-428D-92A2-BC99EEC6AA81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{215202B9-CB0C-41B4-9FB8-2C4B305E2C5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{215202B9-CB0C-41B4-9FB8-2C4B305E2C5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{215202B9-CB0C-41B4-9FB8-2C4B305E2C5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{215202B9-CB0C-41B4-9FB8-2C4B305E2C5F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
