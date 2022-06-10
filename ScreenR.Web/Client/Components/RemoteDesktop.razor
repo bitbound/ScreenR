@@ -1,20 +1,13 @@
 ﻿@using System.Drawing
 @using System.Diagnostics
-@using ScreenR.Shared
 @using System.Runtime.InteropServices
 @inject IJSRuntime JsRuntime
-
-<div>
-    <button class="btn btn-primary" @onclick="SendImage">
-        Test
-    </button>
-</div>
 
 <canvas id="desktopCanvas" @ref="_canvasRef" width="@_canvasWidth" height="@_canvasHeight" />
 
 @code {
-    private int _canvasWidth = 1920;
-    private int _canvasHeight = 1080;
+    private int _canvasWidth = 800;
+    private int _canvasHeight = 600;
 
     private ElementReference _canvasRef;
     private IJSObjectReference? _module;
@@ -42,24 +35,24 @@
         {
             return;
         }
-        
+
         await _module.InvokeVoidAsync("drawImage", _canvasRef, imageBytes, destinationArea);
     }
 
- 
 
-    private void SendImage()
+
+    private void DrawImage()
     {
         if (_module is null)
         {
             return;
         }
 
-
-        var area = new RectangleS(0, 0, 1920, 1080);
+        var area = new Rectangle(0, 0, _canvasWidth, _canvasHeight);
 
         var unmod = (IJSUnmarshalledObjectReference)_module;
-        unmod.InvokeUnmarshalled<byte[], RectangleS, int>("drawImage2", _imageBytes, area);
+        var result = unmod.InvokeUnmarshalled<byte[], Rectangle, int>("drawImageUnmarshalled", _imageBytes, area);
+        Console.WriteLine(result);
 
     }
 }

@@ -22,8 +22,11 @@ var runCommand = new Command("run", "Run the ScreenR service.");
 
 var serverOption = new Option<Uri>(
     new[] { "-s", "--server-url" },
-    "The server URL to which to connect (e.g. https://myserver.example.com).");
-serverOption.IsRequired = true;
+    "The server URL to which to connect (e.g. https://myserver.example.com).")
+{
+    IsRequired = true
+};
+
 
 var deviceOption = new Option<Guid>(
     new[] { "-d", "--device-id" },
@@ -102,7 +105,8 @@ IHost BuildHost<TStartupAction>(AppState? appState = null)
         {
             builder.AddConsole();
             builder.AddDebug();
-            builder.AddProvider(new FileLoggerProvider());
+            builder.AddProvider(new FileLoggerProvider("ScreenR_Service"));
+            builder.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Warning);
         })
         .Build();
 }

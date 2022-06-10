@@ -22,9 +22,7 @@ export async function drawImage(canvas, imageBytes, area) {
     return 0;
 }
 
-export async function drawImage2(imageBytesPtr, areaPtr) {
-
-    // For use with unmarshalled JS interop.
+export async function drawImageUnmarshalled(imageBytesPtr, areaPtr) {
     let imageArray = Blazor.platform.toUint8Array(imageBytesPtr);
 
     let left = Blazor.platform.readInt32Field(areaPtr, 0);
@@ -41,5 +39,5 @@ export async function drawImage2(imageBytesPtr, areaPtr) {
 
     context2D.drawImage(bitmap, left, top, width, height);
 
-    return 0;
+    return 3;
 }

@@ -9,6 +9,7 @@ using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Device = SharpDX.Direct3D11.Device;

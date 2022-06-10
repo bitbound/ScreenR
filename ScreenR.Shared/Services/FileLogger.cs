@@ -9,16 +9,18 @@ namespace ScreenR.Shared.Services
         private static readonly ConcurrentQueue<string> _logQueue = new();
         private static readonly ConcurrentStack<string> _scopeStack = new();
         private static readonly SemaphoreSlim _writeLock = new(1, 1);
+        private readonly string _appName;
         private readonly string _categoryName;
         private readonly System.Timers.Timer _sinkTimer = new(5000) { AutoReset = false };
 
-        public FileLogger(string categoryName)
+        public FileLogger(string appName, string categoryName)
         {
+            _appName = appName;
             _categoryName = categoryName;
             _sinkTimer.Elapsed += SinkTimer_Elapsed;
         }
 
-        private string LogPath => Path.Combine(Path.GetTempPath(), "ScreenR", $"LogFile_{DateTime.Now:yyyy-MM-dd}.log");
+        private string LogPath => Path.Combine(Path.GetTempPath(), "ScreenR", $"{_appName}_{DateTime.Now:yyyy-MM-dd}.log");
 
         public IDisposable BeginScope<TState>(TState state)
         {

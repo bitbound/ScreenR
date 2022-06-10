@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ScreenR.Desktop.Windows": {
+      "commandName": "Project",
+      "commandLineArgs": "start -s https://localhost:7118"
+    }
+  }
+}

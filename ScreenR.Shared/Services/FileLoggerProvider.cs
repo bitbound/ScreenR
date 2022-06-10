@@ -9,10 +9,16 @@ namespace ScreenR.Shared.Services
 {
     public class FileLoggerProvider : ILoggerProvider
     {
+        private readonly string _appName;
+
+        public FileLoggerProvider(string appName)
+        {
+            _appName = appName;
+        }
 
         public ILogger CreateLogger(string categoryName)
         {
-            return new FileLogger(categoryName);
+            return new FileLogger(_appName, categoryName);
         }
 
         public void Dispose()
