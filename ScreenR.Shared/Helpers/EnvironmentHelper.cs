@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ScreenR.Shared.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,6 +18,33 @@ namespace ScreenR.Shared.Helpers
 #else
                 return false;
 #endif
+            }
+        }
+
+        public static Platform Platform
+        {
+            get
+            {
+                if (OperatingSystem.IsWindows())
+                {
+                    return Platform.Windows;
+                }
+                else if (OperatingSystem.IsLinux())
+                {
+                    return Platform.Linux;
+                }
+                else if (OperatingSystem.IsMacOS())
+                {
+                    return Platform.MacOS;
+                }
+                else if (OperatingSystem.IsMacCatalyst())
+                {
+                    return Platform.MacOS;
+                }
+                else
+                {
+                    return Platform.Unknown;
+                }
             }
         }
     }

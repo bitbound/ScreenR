@@ -49,7 +49,7 @@ namespace ScreenR.Service.Services
 
                 var procs = Process
                     .GetProcessesByName("ScreenR_Service")
-                    .Where(x => x.Id != Process.GetCurrentProcess().Id);
+                    .Where(x => x.Id != Environment.ProcessId);
 
                 foreach (var proc in procs)
                 {

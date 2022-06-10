@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using ScreenR.Web.Server.Data;
+using ScreenR.Web.Server.Hubs;
 using ScreenR.Web.Server.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +26,14 @@ builder.Services.AddAuthentication()
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+
+builder.Services
+    .AddSignalR(config =>
+    {
+        config.MaximumParallelInvocationsPerClient = 3;
+        config.MaximumReceiveMessageSize = 64_000;
+    })
+    .AddMessagePackProtocol();
 
 var app = builder.Build();
 
@@ -55,6 +64,8 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 app.MapControllers();
+app.MapHub<DeviceHub>("/device-hub");
+app.MapHub<UserHub>("/user-hub");
 app.MapFallbackToFile("index.html");
 
 app.Run();

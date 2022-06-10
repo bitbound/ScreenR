@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ScreenR.Desktop.Core.Interfaces;
@@ -58,8 +59,9 @@ namespace ScreenR.Desktop.Core
                     .ConfigureServices(services =>
                     {
                         var appState = new AppState(serverUrl, sessionId, passphrase, timeout);
+                        services.AddHostedService<DesktopHubConnection>();
                         services.AddSingleton<IAppState>(appState);
-
+                        services.AddSingleton<IHubConnectionBuilder, HubConnectionBuilder>();
                         configureServices?.Invoke(services);
                     })
                     .ConfigureLogging(builder =>

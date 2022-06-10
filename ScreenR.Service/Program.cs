@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ScreenR.Service.Interfaces;
@@ -85,6 +86,7 @@ IHost BuildHost<TStartupAction>(AppState? appState = null)
         {
             services.AddHostedService<TStartupAction>();
             services.AddHostedService<ServiceHubConnection>();
+            services.AddSingleton<IHubConnectionBuilder, HubConnectionBuilder>();
 
             services.AddSingleton<IAppState>(appState ?? AppState.Empty);
 

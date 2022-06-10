@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using ScreenR.Shared;
+using ScreenR.Shared.Models;
 using ScreenR.Web.Server.Models;
 using System.Collections.Concurrent;
 
@@ -14,19 +15,26 @@ namespace ScreenR.Web.Server.Hubs
     {
         private static readonly ConcurrentDictionary<Guid, StreamingSession> _streamingSessions = new();
 
-        public Guid SessionData
+        private ILogger<DeviceHub> _logger;
+
+        public DeviceHub(ILogger<DeviceHub> logger)
+        {
+            _logger = logger;
+        }
+
+        public DeviceInfo DeviceInfo
         {
             get
             {
-                if (Context.Items[nameof(SessionData)] is Guid sessionId)
+                if (Context.Items[nameof(DeviceInfo)] is DeviceInfo deviceInfo)
                 {
-                    return sessionId;
+                    return deviceInfo;
                 }
-                return Guid.Empty;
+                return DeviceInfo.Empty;
             }
             set
             {
-                Context.Items[nameof(SessionData)] = value;
+                Context.Items[nameof(DeviceInfo)] = value;
             }
         }
 
@@ -40,10 +48,25 @@ namespace ScreenR.Web.Server.Hubs
             return base.OnDisconnectedAsync(exception);
         }
 
-        public async Task SetSessionData(Guid sessionId)
+        public async Task SetDeviceInfo(DeviceInfo deviceInfo)
         {
-            SessionData = sessionId;
-            await Groups.AddToGroupAsync(Context.ConnectionId, sessionId.ToString());
+            DeviceInfo = deviceInfo;
+
+            switch (deviceInfo.Type)
+            {
+                case Shared.Enums.ConnectionType.Unknown:
+                case Shared.Enums.ConnectionType.User:
+                    _logger.LogWarning("Unexpected connection type: {type}", deviceInfo.Type);
+                    return;
+                case Shared.Enums.ConnectionType.Service:
+                    await Groups.AddToGroupAsync(Context.ConnectionId, deviceInfo.DeviceId.ToString());
+                    break;
+                case Shared.Enums.ConnectionType.Desktop:
+                    await Groups.AddToGroupAsync(Context.ConnectionId, deviceInfo.SessionId.ToString());
+                    break;
+                default:
+                    break;
+            }
         }
 
         internal static async Task<Result<IAsyncEnumerable<byte>>> GetStreamSession(Guid sessionId, TimeSpan timeout)

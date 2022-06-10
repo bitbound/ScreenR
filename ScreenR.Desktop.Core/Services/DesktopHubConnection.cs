@@ -2,6 +2,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using ScreenR.Shared.Enums;
+using ScreenR.Shared.Extensions;
+using ScreenR.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,7 +35,7 @@ namespace ScreenR.Desktop.Core.Services
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             var hubConnection = _hubConnectionBuilder
-                .WithUrl($"{_appState.ServerUrl}/device-hub")
+                .WithUrl($"{_appState.ServerUrl.Trim()}/device-hub")
                 .AddMessagePackProtocol()
                 .WithAutomaticReconnect(new RetryPolicy())
                 .Build();
@@ -45,12 +48,22 @@ namespace ScreenR.Desktop.Core.Services
                 try
                 {
                     await hubConnection.StartAsync(stoppingToken);
+                    _logger.LogInformation("Connected to server.");
+
+                    var deviceInfo = DeviceInfo.Create(ConnectionType.Desktop, true, Guid.Empty, _appState.SessionId);
+
+                    await hubConnection.SendAsync("SetDeviceInfo", deviceInfo, cancellationToken: stoppingToken);
+                    break;
+                }
+                catch (HttpRequestException ex)
+                {
+                    _logger.LogWarning("Failed to connect to server.  Status Code: {code}", ex.StatusCode);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error in desktop hub connection.");
-                    await Task.Delay(3_000, stoppingToken);
                 }
+                await Task.Delay(3_000, stoppingToken);
             }
         }
 
