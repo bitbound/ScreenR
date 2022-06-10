@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "ScreenR.Service": {
+      "commandName": "Project"
+    },
+    "Install": {
+      "commandName": "Project",
+      "commandLineArgs": "install -s https://localhost:7118 -d 0def3416-efd6-44e7-84bd-6f6f15582421"
+    }
+  }
+}
