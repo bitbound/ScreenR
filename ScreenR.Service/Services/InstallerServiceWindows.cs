@@ -62,9 +62,8 @@ namespace ScreenR.Service.Services
                 Directory.CreateDirectory(_installDir);
                 File.Copy(exePath, targetPath, true);
 
-                result = await ProcessHelper.GetProcessOutput("cmd.exe", $"/c sc.exe create ScreenR_Service binPath= \"{targetPath}\"");
-                //result = await ProcessHelper.GetProcessOutput("cmd.exe", $"/c sc.exe create ScreenR_Service " +
-                //    $"binPath= \"\\\"{targetPath}\\\" -s {_appState.ServerUrl} -d {_appState.DeviceId}\" start= auto");
+                result = await ProcessHelper.GetProcessOutput("cmd.exe", $"/c sc.exe create ScreenR_Service " +
+                    $"binPath= \"\\\"{targetPath}\\\" run -s {_appState.ServerUrl} -d {_appState.DeviceId}\" start= auto");
 
                 if (!result.IsSuccess)
                 {
@@ -76,7 +75,7 @@ namespace ScreenR.Service.Services
 
                 await ProcessHelper.GetProcessOutput("sc", "start ScreenR_Service");
 
-                _logger.LogInformation("Uninstall started.");
+                _logger.LogInformation("Install completed.");
             }
             catch (Exception ex)
             {
@@ -111,7 +110,7 @@ namespace ScreenR.Service.Services
 
                 var procs = Process
                   .GetProcessesByName("ScreenR_Service")
-                  .Where(x => x.Id != Process.GetCurrentProcess().Id);
+                  .Where(x => x.Id != Environment.ProcessId);
 
                 foreach (var proc in procs)
                 {

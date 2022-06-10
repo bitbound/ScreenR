@@ -32,9 +32,9 @@ deviceOption.IsRequired = true;
 
 installCommand.AddOption(serverOption);
 installCommand.AddOption(deviceOption);
-rootCommand.AddCommand(installCommand);
 runCommand.AddOption(serverOption);
 runCommand.AddOption(deviceOption);
+rootCommand.AddCommand(installCommand);
 rootCommand.AddCommand(runCommand);
 rootCommand.AddCommand(unInstallCommand);
 
@@ -46,7 +46,7 @@ installCommand.SetHandler(async (Uri serverUrl, Guid deviceId) =>
 
 runCommand.SetHandler(async (Uri serverUrl, Guid deviceId) =>
 {
-    using var host = BuildHost<Run>(new (serverUrl, deviceId));
+    using var host = BuildHost<Run>(new(serverUrl, deviceId));
     await host.RunAsync();
 }, serverOption, deviceOption);
 
@@ -62,35 +62,47 @@ return await rootCommand.InvokeAsync(args);
 IHost BuildHost<TStartupAction>(AppState? appState = null)
     where TStartupAction : class, IHostedService
 {
-    return Host.CreateDefaultBuilder(args)
-         .UseWindowsService()
-         .UseSystemd()
-         .UseConsoleLifetime()
-         .ConfigureServices(services =>
-         {
-             services.AddHostedService<TStartupAction>();
-             services.AddHostedService<ServiceHubConnection>();
+    var host = Host.CreateDefaultBuilder(args);
 
-             services.AddSingleton<IAppState>(appState ?? AppState.Empty);
+    if (Environment.UserInteractive)
+    {
+        host.UseConsoleLifetime();
+    }
+    else if (OperatingSystem.IsWindows())
+    {
+        host.UseWindowsService();
+    }
+    else if (OperatingSystem.IsLinux())
+    {
+        host.UseSystemd();
+    }
 
-             if (OperatingSystem.IsWindows())
-             {
-                 services.AddScoped<IInstallerService, InstallerServiceWindows>();
-             }
-             else if (OperatingSystem.IsLinux())
-             {
+    return host
+        .ConfigureServices(services =>
+        {
+            services.AddHostedService<TStartupAction>();
+            services.AddHostedService<ServiceHubConnection>();
 
-             }
-             else
-             {
-                 throw new PlatformNotSupportedException("Only Windows and Linux are supported.");
-             }
-         })
-         .ConfigureLogging(builder =>
-         {
-             builder.AddConsole();
-             builder.AddDebug();
-             builder.AddProvider(new FileLoggerProvider());
-         })
-         .Build();
+            services.AddSingleton<IAppState>(appState ?? AppState.Empty);
+
+            if (OperatingSystem.IsWindows())
+            {
+                services.AddScoped<IInstallerService, InstallerServiceWindows>();
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+
+            }
+            else
+            {
+                throw new PlatformNotSupportedException("Only Windows and Linux are supported.");
+            }
+        })
+        .ConfigureLogging(builder =>
+        {
+            builder.AddConsole();
+            builder.AddDebug();
+            builder.AddProvider(new FileLoggerProvider());
+        })
+        .Build();
 }
