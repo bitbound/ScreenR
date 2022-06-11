@@ -15,7 +15,7 @@ namespace ScreenR.Web.Server.Hubs
     {
         private static readonly ConcurrentDictionary<Guid, StreamingSession> _streamingSessions = new();
 
-        private ILogger<DeviceHub> _logger;
+        private readonly ILogger<DeviceHub> _logger;
 
         public DeviceHub(ILogger<DeviceHub> logger)
         {
