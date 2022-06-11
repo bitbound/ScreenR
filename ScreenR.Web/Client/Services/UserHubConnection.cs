@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.Http;
 
 namespace ScreenR.Web.Client.Services
 {
@@ -14,14 +15,17 @@ namespace ScreenR.Web.Client.Services
         private readonly IHubConnectionBuilder _hubConnectionBuilder;
         private readonly ILogger<UserHubConnection> _logger;
         private HubConnection? _hubConnection;
+        private IHttpMessageHandlerFactory _handlerFactory;
 
         public UserHubConnection(
             IWebAssemblyHostEnvironment hostEnv,
             IHubConnectionBuilder hubConnectionBuilder,
+            IHttpMessageHandlerFactory handlerFactory,
             ILogger<UserHubConnection> logger)
         {
             _hostEnv = hostEnv;
             _hubConnectionBuilder = hubConnectionBuilder;
+            _handlerFactory = handlerFactory;
             _logger = logger;
         }
 
@@ -33,11 +37,16 @@ namespace ScreenR.Web.Client.Services
             }
 
             _hubConnection = _hubConnectionBuilder
-               .WithUrl($"{_hostEnv.BaseAddress.TrimEnd('/')}/user-hub")
+               .WithUrl($"{_hostEnv.BaseAddress.TrimEnd('/')}/user-hub", options =>
+               {
+                   options.HttpMessageHandlerFactory = (x) =>
+                   {
+                       return _handlerFactory.CreateHandler("ScreenR.Web.ServerAPI");
+                   };
+               })
                .AddMessagePackProtocol()
                .WithAutomaticReconnect(new RetryPolicy())
                .Build();
-
             _hubConnection.Reconnecting += HubConnection_Reconnecting;
             _hubConnection.Reconnected += HubConnection_Reconnected;
 
