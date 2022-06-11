@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.AspNetCore.SignalR.Client;
 using ScreenR.Web.Client;
+using ScreenR.Web.Client.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -12,6 +14,9 @@ builder.Services.AddHttpClient("ScreenR.Web.ServerAPI", client => client.BaseAdd
 
 // Supply HttpClient instances that include access tokens when making requests to the server project
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("ScreenR.Web.ServerAPI"));
+
+builder.Services.AddSingleton<IHubConnectionBuilder, HubConnectionBuilder>();
+builder.Services.AddSingleton<IUserHubConnection, UserHubConnection>();
 
 builder.Services.AddApiAuthorization();
 

@@ -1,53 +1,59 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
+﻿using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace ScreenR.Web.Client.Services
 {
     public interface IUserHubConnection
     {
-
+        Task Connect();
     }
 
     public class UserHubConnection : IUserHubConnection
     {
+        private readonly IWebAssemblyHostEnvironment _hostEnv;
         private readonly IHubConnectionBuilder _hubConnectionBuilder;
         private readonly ILogger<UserHubConnection> _logger;
+        private HubConnection? _hubConnection;
 
         public UserHubConnection(
-            IServiceScopeFactory scopeFactory,
+            IWebAssemblyHostEnvironment hostEnv,
             IHubConnectionBuilder hubConnectionBuilder,
             ILogger<UserHubConnection> logger)
         {
+            _hostEnv = hostEnv;
             _hubConnectionBuilder = hubConnectionBuilder;
             _logger = logger;
         }
 
-        public async Task Connect(CancellationToken cancelToken)
+        public async Task Connect()
         {
-            var hubConnection = _hubConnectionBuilder
-                .WithUrl("/user-hub")
-                .AddMessagePackProtocol()
-                .WithAutomaticReconnect(new RetryPolicy())
-                .Build();
+            if (_hubConnection is not null)
+            {
+                return;
+            }
 
-            hubConnection.Reconnecting += HubConnection_Reconnecting;
-            hubConnection.Reconnected += HubConnection_Reconnected;
+            _hubConnection = _hubConnectionBuilder
+               .WithUrl($"{_hostEnv.BaseAddress.TrimEnd('/')}/user-hub")
+               .AddMessagePackProtocol()
+               .WithAutomaticReconnect(new RetryPolicy())
+               .Build();
 
-            while (!cancelToken.IsCancellationRequested)
+            _hubConnection.Reconnecting += HubConnection_Reconnecting;
+            _hubConnection.Reconnected += HubConnection_Reconnected;
+
+            while (true)
             {
                 try
                 {
-                    await hubConnection.StartAsync(cancelToken);
+                    await _hubConnection.StartAsync();
                     _logger.LogInformation("Connected to server.");
-                }
-                catch (HttpRequestException ex)
-                {
-                    _logger.LogWarning("Failed to connect to server.  Status Code: {code}", ex.StatusCode);
+                    break;
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error in user hub connection.");
-                    await Task.Delay(3_000, cancelToken);
                 }
+                await Task.Delay(3_000);
             }
         }
 

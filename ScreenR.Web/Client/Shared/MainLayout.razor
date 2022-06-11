@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@inject IUserHubConnection HubConnection
+@inject AuthenticationStateProvider AuthStateProvider
 
 <div class="page">
     <div class="sidebar">
@@ -15,3 +17,41 @@
         </article>
     </main>
 </div>
+
+@code {
+    private bool _isAuthenticated;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthStateProvider.AuthenticationStateChanged += AuthStateProvider_AuthenticationStateChanged;
+        var currentState = await AuthStateProvider.GetAuthenticationStateAsync();
+
+        _isAuthenticated = currentState.User.Identity?.IsAuthenticated == true;
+
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        await ConnectToHub();
+    }
+
+    private async void AuthStateProvider_AuthenticationStateChanged(Task<AuthenticationState> state)
+    {
+        var newState = await state;
+        _isAuthenticated = newState.User.Identity?.IsAuthenticated == true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ConnectToHub()
+    {
+        if (!_isAuthenticated)
+        {
+            return;
+        }
+
+        await HubConnection.Connect();
+    }
+}
