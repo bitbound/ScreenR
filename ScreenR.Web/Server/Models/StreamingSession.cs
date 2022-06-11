@@ -8,7 +8,8 @@
         }
 
         public SemaphoreSlim ReadySignal { get; } = new(0, 1);
+        public SemaphoreSlim EndSignal { get; } = new(0, 1);
         public Guid SessionId { get; init; }
-        public IAsyncEnumerable<byte>? Stream { get; set; }
+        public IAsyncEnumerable<byte[]>? Stream { get; set; }
     }
 }

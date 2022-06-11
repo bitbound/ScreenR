@@ -69,36 +69,37 @@ namespace ScreenR.Web.Server.Hubs
             }
         }
 
-        public Task SendDesktopStream(IAsyncEnumerable<byte> stream)
+        public async Task SendDesktopStream(IAsyncEnumerable<byte[]> stream)
         {
             if (!_streamingSessions.TryGetValue(DeviceInfo.SessionId, out var session) ||
                 session is null)
             {
                 _logger.LogWarning("Session ID not found: {id}", DeviceInfo.SessionId);
-                return Task.CompletedTask;
+                return;
             }
 
             session.Stream = stream;
             session.ReadySignal.Release();
-            return Task.CompletedTask;
+            await session.EndSignal.WaitAsync();
+            _streamingSessions.TryRemove(session.SessionId, out _);
         }
 
-        internal static async Task<Result<IAsyncEnumerable<byte>>> GetStreamSession(Guid sessionId, TimeSpan timeout)
+        internal static async Task<Result<StreamingSession>> GetStreamSession(Guid sessionId, TimeSpan timeout)
         {
             var session = _streamingSessions.GetOrAdd(sessionId, key => new StreamingSession(sessionId));
             var waitResult = await session.ReadySignal.WaitAsync(timeout);
 
             if (!waitResult)
             {
-                return Result.Fail<IAsyncEnumerable<byte>>("Timed out while waiting for session.");
+                return Result.Fail<StreamingSession>("Timed out while waiting for session.");
             }
 
             if (session.Stream is null)
             {
-                return Result.Fail<IAsyncEnumerable<byte>>("Stream failed to start.");
+                return Result.Fail<StreamingSession>("Stream failed to start.");
             }
 
-            return Result.Ok(session.Stream);
+            return Result.Ok(session);
         }
     }
 }

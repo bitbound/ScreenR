@@ -30,10 +30,10 @@
         var count = 0;
         await foreach (var streamByte in UserHub.GetDesktopStream(guidResult))
         {
-            if (count++ % 100 == 0)
-            {
-                Console.WriteLine("Received 100 bytes.");
-            }
+            //if (count++ % 1000 == 0)
+            //{
+            //    Console.WriteLine("Received 100 bytes.");
+            //}
         }
     }
 }

@@ -8,6 +8,7 @@ using ScreenR.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -44,13 +45,17 @@ namespace ScreenR.Desktop.Core.Services
                 return;
             }
 
-            async IAsyncEnumerable<byte> SendStream()
+            async IAsyncEnumerable<byte[]> SendStream()
             {
-                for (var i = 0; i < 100_000; i++)
+                var buffer = new byte[50_000];
+
+                for (var i = 0; i < 100; i++)
                 {
-                    yield return (byte)new Random().Next(0, 255);
+                    Console.WriteLine($"{i * 50_000}");
+                    RandomNumberGenerator.Fill(buffer);
+                    yield return buffer;
                 }
-                await Task.Delay(1);
+                await Task.Delay(0);
             }
 
             await _hubConnection.SendAsync("SendDesktopStream", SendStream());

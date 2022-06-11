@@ -11,14 +11,14 @@ namespace ScreenR.Web.Server.Hubs
     [Authorize]
     public class UserHub : Hub<IUserHubClient>
     {
-        private IHubContext<DeviceHub, IDeviceHubClient> _deviceHubContext;
+        private readonly IHubContext<DeviceHub, IDeviceHubClient> _deviceHubContext;
 
         public UserHub(IHubContext<DeviceHub, IDeviceHubClient> deviceHubContext)
         {
             _deviceHubContext = deviceHubContext;
         }
 
-        public async IAsyncEnumerable<byte> GetDesktopStream(Guid sessionId, string passphrase)
+        public async IAsyncEnumerable<byte[]> GetDesktopStream(Guid sessionId, string passphrase)
         {
             await _deviceHubContext.Clients
                 .Groups(sessionId.ToString())
@@ -26,15 +26,17 @@ namespace ScreenR.Web.Server.Hubs
 
             var result = await DeviceHub.GetStreamSession(sessionId, TimeSpan.FromSeconds(30));
 
-            if (!result.IsSuccess || result.Value is null)
+            if (!result.IsSuccess || result.Value?.Stream is null)
             {
                 yield break;
             }
 
-            await foreach (var streamByte in result.Value)
+            await foreach (var streamByte in result.Value.Stream)
             {
                 yield return streamByte;
             }
+
+            result.Value.EndSignal.Release();
         }
 
         public override Task OnConnectedAsync()

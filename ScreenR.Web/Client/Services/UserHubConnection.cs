@@ -8,7 +8,7 @@ namespace ScreenR.Web.Client.Services
     public interface IUserHubConnection
     {
         Task Connect();
-        IAsyncEnumerable<byte> GetDesktopStream(Guid sessionId, string passphrase = "");
+        IAsyncEnumerable<byte[]> GetDesktopStream(Guid sessionId, string passphrase = "");
     }
 
     public class UserHubConnection : IUserHubConnection
@@ -42,9 +42,9 @@ namespace ScreenR.Web.Client.Services
                .Build();
         }
 
-        public async IAsyncEnumerable<byte> GetDesktopStream(Guid sessionId, string passphrase = "")
+        public async IAsyncEnumerable<byte[]> GetDesktopStream(Guid sessionId, string passphrase = "")
         {
-            await foreach (var streamByte in _hubConnection.StreamAsync<byte>("GetDesktopStream", sessionId, passphrase))
+            await foreach (var streamByte in _hubConnection.StreamAsync<byte[]>("GetDesktopStream", sessionId, passphrase))
             {
                 yield return streamByte;
             }
