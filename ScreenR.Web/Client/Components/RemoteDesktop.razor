@@ -16,20 +16,7 @@
     private readonly static byte[] _imageBytes = Convert.FromBase64String(_base64Image);
 
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        await base.OnAfterRenderAsync(firstRender);
-        if (_module is null)
-        {
-            _module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/RemoteDesktop.razor.js");
-        }
-    }
-
-    private async Task Test()
-    {
-        await SendImage(_imageBytes, new Rectangle(0, 0, _canvasWidth, _canvasHeight));
-    }
-    private async Task SendImage(byte[] imageBytes, Rectangle destinationArea)
+    public async Task DrawImage(byte[] imageBytes, Rectangle destinationArea)
     {
         if (_module is null)
         {
@@ -40,8 +27,7 @@
     }
 
 
-
-    private void DrawImage()
+    public void DrawImage2()
     {
         if (_module is null)
         {
@@ -53,6 +39,15 @@
         var unmod = (IJSUnmarshalledObjectReference)_module;
         var result = unmod.InvokeUnmarshalled<byte[], Rectangle, int>("drawImageUnmarshalled", _imageBytes, area);
         Console.WriteLine(result);
-
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (_module is null)
+        {
+            _module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/RemoteDesktop.razor.js");
+        }
+    }
+
 }

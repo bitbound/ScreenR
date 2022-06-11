@@ -1,0 +1,39 @@
+﻿@inject IUserHubConnection UserHub
+@inject IJsInterop JsInterop
+
+<h3>Dashboard</h3>
+
+<div>
+    <input @bind-value="_sessionId" class="form-control" />
+    <button class="btn btn-primary" @onclick="Test">Start Test</button>
+
+</div>
+<div>
+    <RemoteDesktop @ref="_desktop" />
+
+</div>
+
+@code {
+    private RemoteDesktop? _desktop;
+    private string? _sessionId;
+
+    public async Task Test()
+    {
+        _desktop?.DrawImage2();
+
+        if (!Guid.TryParse(_sessionId, out var guidResult))
+        {
+            await JsInterop.Alert("Session ID must be a valid GUID.");
+            return;
+        }
+
+        var count = 0;
+        await foreach (var streamByte in UserHub.GetDesktopStream(guidResult))
+        {
+            if (count++ % 100 == 0)
+            {
+                Console.WriteLine("Received 100 bytes.");
+            }
+        }
+    }
+}

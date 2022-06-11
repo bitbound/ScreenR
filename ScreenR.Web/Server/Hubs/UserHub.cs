@@ -18,11 +18,11 @@ namespace ScreenR.Web.Server.Hubs
             _deviceHubContext = deviceHubContext;
         }
 
-        public async IAsyncEnumerable<byte> GetDesktopStream(Guid sessionId)
+        public async IAsyncEnumerable<byte> GetDesktopStream(Guid sessionId, string passphrase)
         {
             await _deviceHubContext.Clients
                 .Groups(sessionId.ToString())
-                .StartDesktopStream();
+                .StartDesktopStream(passphrase);
 
             var result = await DeviceHub.GetStreamSession(sessionId, TimeSpan.FromSeconds(30));
 

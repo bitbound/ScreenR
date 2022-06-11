@@ -17,6 +17,9 @@ builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().Cre
 
 builder.Services.AddSingleton<IHubConnectionBuilder, HubConnectionBuilder>();
 builder.Services.AddSingleton<IUserHubConnection, UserHubConnection>();
+builder.Services.AddScoped<IJsInterop, JsInterop>();
+builder.Services.AddScoped<IToastService, ToastService>();
+builder.Services.AddScoped<IModalService, ModalService>();
 
 builder.Services.AddApiAuthorization();
 

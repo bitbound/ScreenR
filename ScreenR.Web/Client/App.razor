@@ -1,4 +1,7 @@
-﻿<CascadingAuthenticationState>
+﻿@inject IUserHubConnection HubConnection
+@inject AuthenticationStateProvider AuthStateProvider
+
+<CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
@@ -23,3 +26,18 @@
         </NotFound>
     </Router>
 </CascadingAuthenticationState>
+
+@code {
+    private bool _isAuthenticated;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var currentState = await AuthStateProvider.GetAuthenticationStateAsync();
+
+        _isAuthenticated = currentState.User.Identity?.IsAuthenticated == true;
+
+        await HubConnection.Connect();
+
+        await base.OnInitializedAsync();
+    }
+}

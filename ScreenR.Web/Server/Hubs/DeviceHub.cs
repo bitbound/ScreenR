@@ -8,7 +8,7 @@ namespace ScreenR.Web.Server.Hubs
 {
     public interface IDeviceHubClient
     {
-        Task StartDesktopStream();
+        Task StartDesktopStream(string passphrase);
     }
 
     public class DeviceHub : Hub<IDeviceHubClient>
@@ -67,6 +67,20 @@ namespace ScreenR.Web.Server.Hubs
                 default:
                     break;
             }
+        }
+
+        public Task SendDesktopStream(IAsyncEnumerable<byte> stream)
+        {
+            if (!_streamingSessions.TryGetValue(DeviceInfo.SessionId, out var session) ||
+                session is null)
+            {
+                _logger.LogWarning("Session ID not found: {id}", DeviceInfo.SessionId);
+                return Task.CompletedTask;
+            }
+
+            session.Stream = stream;
+            session.ReadySignal.Release();
+            return Task.CompletedTask;
         }
 
         internal static async Task<Result<IAsyncEnumerable<byte>>> GetStreamSession(Guid sessionId, TimeSpan timeout)

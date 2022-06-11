@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+﻿using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Http;
 
@@ -7,37 +8,29 @@ namespace ScreenR.Web.Client.Services
     public interface IUserHubConnection
     {
         Task Connect();
+        IAsyncEnumerable<byte> GetDesktopStream(Guid sessionId, string passphrase = "");
     }
 
     public class UserHubConnection : IUserHubConnection
     {
-        private readonly IWebAssemblyHostEnvironment _hostEnv;
-        private readonly IHubConnectionBuilder _hubConnectionBuilder;
         private readonly ILogger<UserHubConnection> _logger;
-        private HubConnection? _hubConnection;
-        private IHttpMessageHandlerFactory _handlerFactory;
+        private readonly IHttpMessageHandlerFactory _handlerFactory;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly HubConnection _hubConnection;
 
         public UserHubConnection(
+            IServiceScopeFactory scopeFactory,
             IWebAssemblyHostEnvironment hostEnv,
             IHubConnectionBuilder hubConnectionBuilder,
             IHttpMessageHandlerFactory handlerFactory,
             ILogger<UserHubConnection> logger)
         {
-            _hostEnv = hostEnv;
-            _hubConnectionBuilder = hubConnectionBuilder;
+            _scopeFactory = scopeFactory;
             _handlerFactory = handlerFactory;
             _logger = logger;
-        }
 
-        public async Task Connect()
-        {
-            if (_hubConnection is not null)
-            {
-                return;
-            }
-
-            _hubConnection = _hubConnectionBuilder
-               .WithUrl($"{_hostEnv.BaseAddress.TrimEnd('/')}/user-hub", options =>
+            _hubConnection = hubConnectionBuilder
+               .WithUrl($"{hostEnv.BaseAddress.TrimEnd('/')}/user-hub", options =>
                {
                    options.HttpMessageHandlerFactory = (x) =>
                    {
@@ -47,6 +40,23 @@ namespace ScreenR.Web.Client.Services
                .AddMessagePackProtocol()
                .WithAutomaticReconnect(new RetryPolicy())
                .Build();
+        }
+
+        public async IAsyncEnumerable<byte> GetDesktopStream(Guid sessionId, string passphrase = "")
+        {
+            await foreach (var streamByte in _hubConnection.StreamAsync<byte>("GetDesktopStream", sessionId, passphrase))
+            {
+                yield return streamByte;
+            }
+        }
+
+        public async Task Connect()
+        {
+            if (_hubConnection.State != HubConnectionState.Disconnected)
+            {
+                return;
+            }
+
             _hubConnection.Reconnecting += HubConnection_Reconnecting;
             _hubConnection.Reconnected += HubConnection_Reconnected;
 
@@ -54,9 +64,16 @@ namespace ScreenR.Web.Client.Services
             {
                 try
                 {
-                    await _hubConnection.StartAsync();
-                    _logger.LogInformation("Connected to server.");
-                    break;
+                    using var scope = _scopeFactory.CreateScope();
+                    var authProvider = scope.ServiceProvider.GetRequiredService<AuthenticationStateProvider>();
+                    var authState = await authProvider.GetAuthenticationStateAsync();
+
+                    if (authState.User.Identity?.IsAuthenticated == true)
+                    {
+                        await _hubConnection.StartAsync();
+                        _logger.LogInformation("Connected to server.");
+                        break;
+                    }
                 }
                 catch (Exception ex)
                 {

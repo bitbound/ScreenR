@@ -38,6 +38,6 @@ export async function drawImageUnmarshalled(imageBytesPtr, areaPtr) {
     let bitmap = await createImageBitmap(new Blob([imageArray]));
 
     context2D.drawImage(bitmap, left, top, width, height);
-
-    return 3;
+    
+    return imageArray.byteLength;
 }
