@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using ScreenR.Desktop.Core.Interfaces;
 using ScreenR.Shared.Enums;
 using ScreenR.Shared.Extensions;
 using ScreenR.Shared.Models;
@@ -16,57 +17,38 @@ namespace ScreenR.Desktop.Core.Services
 {
     internal class DesktopHubConnection : BackgroundService
     {
-        private readonly IHubConnectionBuilder _hubConnectionBuilder;
         private readonly IAppState _appState;
-        private readonly ILogger<DesktopHubConnection> _logger;
+        private readonly IDesktopStreamer _desktopStreamer;
         private readonly HubConnection _hubConnection;
+        private readonly IHubConnectionBuilder _hubConnectionBuilder;
+        private readonly ILogger<DesktopHubConnection> _logger;
+        private DeviceInfo _deviceInfo;
 
         public DesktopHubConnection(
             IHubConnectionBuilder hubConnectionBuilder,
             IAppState appState,
+            IDesktopStreamer desktopStreamer,
             ILogger<DesktopHubConnection> logger)
         {
             _hubConnectionBuilder = hubConnectionBuilder;
             _appState = appState;
+            _desktopStreamer = desktopStreamer;
             _logger = logger;
+            _deviceInfo = DeviceInfo.Create(ConnectionType.Desktop, true, Guid.Empty, appState.DesktopId);
 
             _hubConnection = _hubConnectionBuilder
-                .WithUrl($"{_appState.ServerUrl.Trim()}/device-hub")
+                .WithUrl($"{appState.ServerUrl.Trim()}/desktop-hub")
                 .AddMessagePackProtocol()
                 .WithAutomaticReconnect(new RetryPolicy())
                 .Build();
-        }
-
-        private async Task StartDesktopStream(string passphrase)
-        {
-            if (passphrase != _appState.Passphrase)
-            {
-                _logger.LogWarning("Invalid passphrase supplied: {passphrase}", passphrase);
-                return;
-            }
-
-            async IAsyncEnumerable<byte[]> SendStream()
-            {
-                var buffer = new byte[50_000];
-
-                for (var i = 0; i < 100; i++)
-                {
-                    Console.WriteLine($"{i * 50_000}");
-                    RandomNumberGenerator.Fill(buffer);
-                    yield return buffer;
-                }
-                await Task.Delay(0);
-            }
-
-            await _hubConnection.SendAsync("SendDesktopStream", SendStream());
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _hubConnection.Reconnecting += HubConnection_Reconnecting;
             _hubConnection.Reconnected += HubConnection_Reconnected;
-            _hubConnection.On<string>("StartDesktopStream", StartDesktopStream);
-            
+            _hubConnection.On<StreamToken, string>("StartDesktopStream", StartDesktopStream);
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
@@ -77,11 +59,9 @@ namespace ScreenR.Desktop.Core.Services
 
                     _logger.LogInformation("Connected to server.");
 
-                    var deviceInfo = DeviceInfo.Create(ConnectionType.Desktop, true, Guid.Empty, _appState.SessionId);
+                    await _hubConnection.SendAsync("SetDeviceInfo", _deviceInfo, cancellationToken: stoppingToken);
 
-                    await _hubConnection.SendAsync("SetDeviceInfo", deviceInfo, cancellationToken: stoppingToken);
-
-                    _logger.LogInformation("Created session: {sessionId}", _appState.SessionId);
+                    _logger.LogInformation("Created session with desktop process ID: {desktopId}", _appState.DesktopId);
                     break;
                 }
                 catch (HttpRequestException ex)
@@ -96,16 +76,30 @@ namespace ScreenR.Desktop.Core.Services
             }
         }
 
-        private Task HubConnection_Reconnected(string? arg)
+        private async Task HubConnection_Reconnected(string? arg)
         {
+            _deviceInfo = DeviceInfo.Create(ConnectionType.Desktop, true, Guid.Empty, _appState.DesktopId);
+            await _hubConnection.SendAsync("SetDeviceInfo", _deviceInfo);
             _logger.LogInformation("Reconnected to desktop hub.");
-            return Task.CompletedTask;
         }
 
         private Task HubConnection_Reconnecting(Exception? arg)
         {
             _logger.LogWarning(arg, "Reconnecting to desktop hub.");
             return Task.CompletedTask;
+        }
+
+        private async Task StartDesktopStream(StreamToken streamToken, string passphrase)
+        {
+            if (passphrase != _appState.Passphrase)
+            {
+                _logger.LogWarning("Invalid passphrase supplied: {passphrase}", passphrase);
+                return;
+            }
+
+            // TODO: Cancellation token.
+            // TODO: Throttle sender.
+            await _hubConnection.SendAsync("SendDesktopStream", streamToken, _desktopStreamer.GetDesktopStream());
         }
 
         private class RetryPolicy : IRetryPolicy

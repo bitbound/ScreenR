@@ -21,6 +21,8 @@ builder.Services.AddScoped<IJsInterop, JsInterop>();
 builder.Services.AddScoped<IToastService, ToastService>();
 builder.Services.AddScoped<IModalService, ModalService>();
 
+builder.Logging.AddFilter("System.Net.Http.HttpClient.ScreenR.Web.ServerAPI", LogLevel.Warning);
+
 builder.Services.AddApiAuthorization();
 
 await builder.Build().RunAsync();

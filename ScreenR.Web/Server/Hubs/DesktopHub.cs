@@ -1,23 +1,24 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using ScreenR.Shared;
+using ScreenR.Shared.Dtos;
 using ScreenR.Shared.Models;
 using ScreenR.Web.Server.Models;
 using System.Collections.Concurrent;
 
 namespace ScreenR.Web.Server.Hubs
 {
-    public interface IDeviceHubClient
+    public interface IDesktopHubClient
     {
-        Task StartDesktopStream(string passphrase);
+        Task StartDesktopStream(StreamToken streamToken, string passphrase);
     }
 
-    public class DeviceHub : Hub<IDeviceHubClient>
+    public class DesktopHub : Hub<IDesktopHubClient>
     {
-        private static readonly ConcurrentDictionary<Guid, StreamingSession> _streamingSessions = new();
+        private static readonly ConcurrentDictionary<StreamToken, StreamingSession> _streamingSessions = new();
 
-        private readonly ILogger<DeviceHub> _logger;
+        private readonly ILogger<DesktopHub> _logger;
 
-        public DeviceHub(ILogger<DeviceHub> logger)
+        public DesktopHub(ILogger<DesktopHub> logger)
         {
             _logger = logger;
         }
@@ -56,37 +57,37 @@ namespace ScreenR.Web.Server.Hubs
             {
                 case Shared.Enums.ConnectionType.Unknown:
                 case Shared.Enums.ConnectionType.User:
-                    _logger.LogWarning("Unexpected connection type: {type}", deviceInfo.Type);
-                    return;
                 case Shared.Enums.ConnectionType.Service:
-                    await Groups.AddToGroupAsync(Context.ConnectionId, deviceInfo.DeviceId.ToString());
+                    _logger.LogWarning("Unexpected connection type: {type}", deviceInfo.Type);
                     break;
                 case Shared.Enums.ConnectionType.Desktop:
-                    await Groups.AddToGroupAsync(Context.ConnectionId, deviceInfo.SessionId.ToString());
+                    await Groups.AddToGroupAsync(Context.ConnectionId, deviceInfo.DesktopId.ToString());
                     break;
                 default:
+                    _logger.LogWarning("Unexpected connection type: {type}", deviceInfo.Type);
                     break;
             }
         }
 
-        public async Task SendDesktopStream(IAsyncEnumerable<byte[]> stream)
+        public async Task SendDesktopStream(StreamToken streamToken, IAsyncEnumerable<DesktopFrameChunk> stream)
         {
-            if (!_streamingSessions.TryGetValue(DeviceInfo.SessionId, out var session) ||
-                session is null)
-            {
-                _logger.LogWarning("Session ID not found: {id}", DeviceInfo.SessionId);
-                return;
-            }
+            var session = _streamingSessions.GetOrAdd(streamToken, key => new StreamingSession(streamToken));
 
-            session.Stream = stream;
-            session.ReadySignal.Release();
-            await session.EndSignal.WaitAsync();
-            _streamingSessions.TryRemove(session.SessionId, out _);
+            try
+            {
+                session.Stream = stream;
+                session.ReadySignal.Release();
+                await session.EndSignal.WaitAsync(TimeSpan.FromHours(8));
+            }
+            finally
+            {
+                _streamingSessions.TryRemove(session.StreamToken, out _);
+            }
         }
 
-        internal static async Task<Result<StreamingSession>> GetStreamSession(Guid sessionId, TimeSpan timeout)
+        internal static async Task<Result<StreamingSession>> GetStreamSession(StreamToken streamToken, TimeSpan timeout)
         {
-            var session = _streamingSessions.GetOrAdd(sessionId, key => new StreamingSession(sessionId));
+            var session = _streamingSessions.GetOrAdd(streamToken, key => new StreamingSession(streamToken));
             var waitResult = await session.ReadySignal.WaitAsync(timeout);
 
             if (!waitResult)

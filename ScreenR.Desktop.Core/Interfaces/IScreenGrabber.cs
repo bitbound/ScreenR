@@ -1,4 +1,4 @@
-﻿using ScreenR.Desktop.Core.Models;
+﻿using ScreenR.Shared.Models;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;

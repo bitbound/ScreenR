@@ -41,7 +41,7 @@ namespace ScreenR.Service.Services
             }
 
             var hubConnection = _hubConnectionBuilder
-              .WithUrl($"{_appState.ServerUrl.Trim()}/device-hub")
+              .WithUrl($"{_appState.ServerUrl.Trim()}/service-hub")
               .AddMessagePackProtocol()
               .WithAutomaticReconnect(new RetryPolicy())
               .Build();

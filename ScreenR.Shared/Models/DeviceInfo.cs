@@ -22,6 +22,9 @@ namespace ScreenR.Shared.Models
         public string ComputerName { get; init; } = string.Empty;
 
         [DataMember]
+        public Guid DesktopId { get; set; }
+
+        [DataMember]
         public Guid DeviceId { get; init; }
 
         [DataMember]
@@ -40,23 +43,19 @@ namespace ScreenR.Shared.Models
         public int ProcessorCount { get; init; }
 
         [DataMember]
-        public Guid SessionId { get; init; }
-
-        [DataMember]
         public ConnectionType Type { get; init; }
-
 
         public static DeviceInfo Create(
             ConnectionType type,
             bool isOnline,
             Guid deviceId,
-            Guid sessionId)
+            Guid desktopId)
         {
             return new DeviceInfo()
             {
                 Type = type,
                 DeviceId = deviceId,
-                SessionId = sessionId,
+                DesktopId = desktopId,
                 IsOnline = isOnline,
                 Architecture = RuntimeInformation.OSArchitecture,
                 ComputerName = Environment.MachineName,

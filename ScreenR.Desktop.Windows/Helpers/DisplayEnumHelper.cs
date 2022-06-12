@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 //  ---------------------------------------------------------------------------------
 
-using ScreenR.Desktop.Core.Models;
+using ScreenR.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

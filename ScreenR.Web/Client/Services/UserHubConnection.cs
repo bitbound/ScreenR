@@ -2,22 +2,23 @@
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Http;
+using ScreenR.Shared.Dtos;
+using ScreenR.Shared.Models;
 
 namespace ScreenR.Web.Client.Services
 {
     public interface IUserHubConnection
     {
         Task Connect();
-        IAsyncEnumerable<byte[]> GetDesktopStream(Guid sessionId, string passphrase = "");
+        IAsyncEnumerable<DesktopFrameChunk> GetDesktopStream(Guid sessionId, Guid requestId, string passphrase = "");
     }
 
     public class UserHubConnection : IUserHubConnection
     {
-        private readonly ILogger<UserHubConnection> _logger;
         private readonly IHttpMessageHandlerFactory _handlerFactory;
-        private readonly IServiceScopeFactory _scopeFactory;
         private readonly HubConnection _hubConnection;
-
+        private readonly ILogger<UserHubConnection> _logger;
+        private readonly IServiceScopeFactory _scopeFactory;
         public UserHubConnection(
             IServiceScopeFactory scopeFactory,
             IWebAssemblyHostEnvironment hostEnv,
@@ -40,14 +41,6 @@ namespace ScreenR.Web.Client.Services
                .AddMessagePackProtocol()
                .WithAutomaticReconnect(new RetryPolicy())
                .Build();
-        }
-
-        public async IAsyncEnumerable<byte[]> GetDesktopStream(Guid sessionId, string passphrase = "")
-        {
-            await foreach (var streamByte in _hubConnection.StreamAsync<byte[]>("GetDesktopStream", sessionId, passphrase))
-            {
-                yield return streamByte;
-            }
         }
 
         public async Task Connect()
@@ -83,6 +76,14 @@ namespace ScreenR.Web.Client.Services
             }
         }
 
+        public async IAsyncEnumerable<DesktopFrameChunk> GetDesktopStream(Guid sessionId, Guid requestId, string passphrase = "")
+        {
+            await foreach (var chunk in _hubConnection.StreamAsync<DesktopFrameChunk>("GetDesktopStream", sessionId, requestId, passphrase))
+            {
+                yield return chunk;
+            }
+        }
+
         private Task HubConnection_Reconnected(string? arg)
         {
             _logger.LogInformation("Reconnected to user hub.");
@@ -94,7 +95,6 @@ namespace ScreenR.Web.Client.Services
             _logger.LogWarning(arg, "Reconnecting to user hub.");
             return Task.CompletedTask;
         }
-
         private class RetryPolicy : IRetryPolicy
         {
             public TimeSpan? NextRetryDelay(RetryContext retryContext)

@@ -1,7 +1,7 @@
 #nullable disable
 using Microsoft.Extensions.Logging;
-using ScreenR.Desktop.Core;
-using ScreenR.Desktop.Core.Models;
+using ScreenR.Shared.Models;
+using ScreenR.Desktop.Core.Services;
 using ScreenR.Desktop.Windows.Capture;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
@@ -17,7 +17,7 @@ namespace ScreenR.Desktop.Windows.Tests
     public class ManualTests
     {
         private IEnumerable<DisplayInfo> _displays;
-        private ImageHelper _imageHelper;
+        private BitmapUtility _imageHelper;
         private ScreenRecorder _recorder;
         private LoggerFactory _factory;
         private ScreenGrabber _grabber;
@@ -241,7 +241,7 @@ namespace ScreenR.Desktop.Windows.Tests
             _logger = _factory.CreateLogger<ScreenGrabber>();
             _grabber = new ScreenGrabber(_logger);
             _displays = _grabber.GetDisplays();
-            _imageHelper = new ImageHelper(_factory.CreateLogger<ImageHelper>());
+            _imageHelper = new BitmapUtility(_factory.CreateLogger<BitmapUtility>());
             _recorder = new ScreenRecorder(_grabber);
         }
 
@@ -276,7 +276,7 @@ namespace ScreenR.Desktop.Windows.Tests
             bitmap.Encode(fs, format, quality);
         }
 
-        private double GetAverage(Stopwatch sw, int iterations)
+        private static double GetAverage(Stopwatch sw, int iterations)
         {
             return Math.Round(sw.Elapsed.TotalMilliseconds / iterations, 2);
         }

@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 var rootCommand = CommandBuilder.BuildRootCommand(args, services =>
 {
     services.AddTransient<IScreenGrabber, ScreenGrabber>();
+    services.AddTransient<IDesktopStreamer, DesktopStreamer>();
 });
 
 return await rootCommand.InvokeAsync(args);

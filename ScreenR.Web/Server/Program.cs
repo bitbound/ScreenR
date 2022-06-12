@@ -67,7 +67,8 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 app.MapControllers();
-app.MapHub<DeviceHub>("/device-hub");
+app.MapHub<ServiceHub>("/service-hub");
+app.MapHub<DesktopHub>("/desktop-hub");
 app.MapHub<UserHub>("/user-hub");
 app.MapFallbackToFile("index.html");
 

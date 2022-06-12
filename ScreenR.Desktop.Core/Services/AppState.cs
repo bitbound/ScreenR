@@ -9,24 +9,24 @@ namespace ScreenR.Desktop.Core.Services
     public interface IAppState
     {
         string Passphrase { get; }
-        Guid SessionId { get; }
+        Guid DesktopId { get; }
         Uri ServerUrl { get; }
         int TimeoutSeconds { get; }
     }
 
     public class AppState : IAppState
     {
-        public AppState(Uri serverUrl, Guid sessionId, string passphrase, int timeout)
+        public AppState(Uri serverUrl, Guid desktopId, string passphrase, int timeout)
         {
             ServerUrl = serverUrl;
-            SessionId = sessionId;
+            DesktopId = desktopId;
             Passphrase = passphrase;
             TimeoutSeconds = timeout;
         }
 
         public string Passphrase { get; } = string.Empty;
         public Uri ServerUrl { get; }
-        public Guid SessionId { get; } = Guid.NewGuid();
+        public Guid DesktopId { get; } = Guid.NewGuid();
 
         public int TimeoutSeconds { get; } = -1;
     }

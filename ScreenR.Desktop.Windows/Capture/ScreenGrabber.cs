@@ -3,7 +3,7 @@ using Microsoft.IO;
 using PInvoke;
 using ScreenR.Desktop.Core;
 using ScreenR.Desktop.Core.Interfaces;
-using ScreenR.Desktop.Core.Models;
+using ScreenR.Shared.Models;
 using ScreenR.Desktop.Windows.Helpers;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
@@ -118,7 +118,7 @@ namespace ScreenR.Desktop.Windows.Capture
                 var texture2D = dxOutput.Texture2D;
                 var bounds = dxOutput.Bounds;
 
-                var result = outputDuplication.TryAcquireNextFrame(100, out var duplicateFrameInfo, out var screenResource);
+                var result = outputDuplication.TryAcquireNextFrame(50, out var duplicateFrameInfo, out var screenResource);
 
                 if (!result.Success)
                 {
@@ -151,6 +151,24 @@ namespace ScreenR.Desktop.Windows.Capture
                 bitmap.UnlockBits(bitmapData);
                 device.ImmediateContext.UnmapSubresource(texture2D, 0);
                 screenResource?.Dispose();
+
+                switch (dxOutput.Rotation)
+                {
+                    case DisplayModeRotation.Unspecified:
+                    case DisplayModeRotation.Identity:
+                        break;
+                    case DisplayModeRotation.Rotate90:
+                        bitmap.RotateFlip(RotateFlipType.Rotate270FlipNone);
+                        break;
+                    case DisplayModeRotation.Rotate180:
+                        bitmap.RotateFlip(RotateFlipType.Rotate180FlipNone);
+                        break;
+                    case DisplayModeRotation.Rotate270:
+                        bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
+                        break;
+                    default:
+                        break;
+                }
                 return Result.Ok(bitmap);
             }
             catch (Exception ex)

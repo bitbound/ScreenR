@@ -1,36 +1,38 @@
 ﻿using Microsoft.Extensions.Logging;
 using ScreenR.Desktop.Core.Extensions;
 using SkiaSharp;
+using SkiaSharp.Views.Desktop;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.Versioning;
 
-namespace ScreenR.Desktop.Core
+namespace ScreenR.Desktop.Core.Services
 {
-    public interface IImageHelper
+    public interface IBitmapUtility
     {
-        SKBitmap CropBitmap(SKBitmap bitmap, SKRect cropArea);
-        SKRect GetDiffArea(SKBitmap currentFrame, SKBitmap? previousFrame, bool forceFullscreen = false);
+        SKBitmap CropBitmap(SKBitmap bitmap, Rectangle cropArea);
+        Rectangle GetDiffArea(SKBitmap currentFrame, SKBitmap? previousFrame, bool forceFullscreen = false);
         Result<SKBitmap> GetImageDiff(SKBitmap currentFrame, SKBitmap? previousFrame, bool forceFullscreen = false);
     }
 
-    public class ImageHelper : IImageHelper
+    public class BitmapUtility : IBitmapUtility
     {
-        private readonly ILogger<ImageHelper> _logger;
+        private readonly ILogger<BitmapUtility> _logger;
 
-        public ImageHelper(ILogger<ImageHelper> logger)
+        public BitmapUtility(ILogger<BitmapUtility> logger)
         {
             _logger = logger;
         }
 
-        public SKBitmap CropBitmap(SKBitmap bitmap, SKRect cropArea)
+        public SKBitmap CropBitmap(SKBitmap bitmap, Rectangle cropArea)
         {
-            var cropped = new SKBitmap((int)cropArea.Width, (int)cropArea.Height);
+            var cropped = new SKBitmap(cropArea.Width, cropArea.Height);
             using var canvas = new SKCanvas(cropped);
+
             canvas.DrawBitmap(
                 bitmap,
-                cropArea,
+                cropArea.ToSKRect(),
                 new SKRect(0, 0, cropArea.Width, cropArea.Height));
             return cropped;
         }
@@ -75,7 +77,7 @@ namespace ScreenR.Desktop.Core
                     {
                         for (var column = 0; column < width; column++)
                         {
-                            var index = (row * width * bytesPerPixel) + (column * bytesPerPixel);
+                            var index = row * width * bytesPerPixel + column * bytesPerPixel;
 
                             byte* data1 = scan1 + index;
                             byte* data2 = scan2 + index;
@@ -111,13 +113,13 @@ namespace ScreenR.Desktop.Core
                 return Result.Fail<SKBitmap>(ex);
             }
         }
-        public SKRect GetDiffArea(SKBitmap currentFrame, SKBitmap? previousFrame, bool forceFullscreen = false)
+        public Rectangle GetDiffArea(SKBitmap currentFrame, SKBitmap? previousFrame, bool forceFullscreen = false)
         {
             try
             {
                 if (currentFrame is null)
                 {
-                    return SKRect.Empty;
+                    return Rectangle.Empty;
                 }
 
                 if (previousFrame is null || forceFullscreen)
@@ -130,7 +132,7 @@ namespace ScreenR.Desktop.Core
                     currentFrame.Width != previousFrame.Width ||
                     currentFrame.BytesPerPixel != previousFrame.BytesPerPixel)
                 {
-                    return SKRect.Empty;
+                    return Rectangle.Empty;
                 }
 
                 var width = currentFrame.Width;
@@ -152,7 +154,7 @@ namespace ScreenR.Desktop.Core
                     {
                         for (var column = 0; column < width; column++)
                         {
-                            var index = (row * width * bytesPerPixel) + (column * bytesPerPixel);
+                            var index = row * width * bytesPerPixel + column * bytesPerPixel;
 
                             byte* data1 = scan1 + index;
                             byte* data2 = scan2 + index;
@@ -191,16 +193,16 @@ namespace ScreenR.Desktop.Core
                         right = Math.Min(right + 2, width);
                         bottom = Math.Min(bottom + 2, height);
 
-                        return new SKRect(left, top, right, bottom);
+                        return new Rectangle(left, top, right - left, bottom - top);
                     }
 
-                    return SKRect.Empty;
+                    return Rectangle.Empty;
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while getting area diff.");
-                return SKRect.Empty;
+                return Rectangle.Empty;
             }
         }
     }

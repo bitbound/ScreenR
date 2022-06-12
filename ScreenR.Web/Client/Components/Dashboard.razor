@@ -1,39 +1,37 @@
-﻿@inject IUserHubConnection UserHub
+﻿@using ScreenR.Shared.Dtos
+@inject IUserHubConnection UserHub
 @inject IJsInterop JsInterop
 
 <h3>Dashboard</h3>
 
 <div>
-    <input @bind-value="_sessionId" class="form-control" />
+    <input @bind-value="_desktopId" class="form-control" />
     <button class="btn btn-primary" @onclick="Test">Start Test</button>
 
 </div>
-<div>
+<div style="width: 1280px; height: 720px;">
     <RemoteDesktop @ref="_desktop" />
 
 </div>
 
 @code {
+    private readonly Guid _desktopInstance = Guid.NewGuid();
     private RemoteDesktop? _desktop;
-    private string? _sessionId;
+    private string? _desktopId;
 
     public async Task Test()
     {
-        _desktop?.DrawImage2();
-
-        if (!Guid.TryParse(_sessionId, out var guidResult))
+        if (!Guid.TryParse(_desktopId, out var sessionResult))
         {
-            await JsInterop.Alert("Session ID must be a valid GUID.");
+            await JsInterop.Alert("Desktop ID must be a valid GUID.");
             return;
         }
 
-        var count = 0;
-        await foreach (var streamByte in UserHub.GetDesktopStream(guidResult))
+        if (_desktop is null)
         {
-            //if (count++ % 1000 == 0)
-            //{
-            //    Console.WriteLine("Received 100 bytes.");
-            //}
+            return;
         }
+
+        await _desktop.GetStream(sessionResult);
     }
 }
