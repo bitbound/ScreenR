@@ -59,10 +59,11 @@ namespace ScreenR.Desktop.Core
                     .ConfigureServices(services =>
                     {
                         var appState = new AppState(serverUrl, sessionId, passphrase, timeout);
-                        services.AddHostedService<DesktopHubConnection>();
+                        services.AddSingleton<IDesktopHubConnection, DesktopHubConnection>();
                         services.AddSingleton<IAppState>(appState);
                         services.AddSingleton<IBitmapUtility, BitmapUtility>();
-                        services.AddSingleton<IHubConnectionBuilder, HubConnectionBuilder>();
+                        services.AddSingleton<IHubConnectionBuilderFactory, HubConnectionBuilderFactory>();
+                        services.AddHostedService<StartupAction>();
                         configureServices?.Invoke(services);
                     })
                     .ConfigureLogging(builder =>
@@ -73,7 +74,7 @@ namespace ScreenR.Desktop.Core
                         builder.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Warning);
                     })
                     .Build();
-
+                
                 await host.RunAsync();
             }, serverOption, sessionOption, passphraseOption, timeoutOption);
 

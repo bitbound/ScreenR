@@ -5,13 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Service.Services.StartupActions
+namespace ScreenR.Desktop.Core.Services
 {
-    internal class Run : IHostedService
+    internal class StartupAction : IHostedService
     {
-        private readonly IServiceHubConnection _hubConnection;
+        private readonly IDesktopHubConnection _hubConnection;
 
-        public Run(IServiceHubConnection hubConnection)
+        public StartupAction(IDesktopHubConnection hubConnection)
         {
             _hubConnection = hubConnection;
         }

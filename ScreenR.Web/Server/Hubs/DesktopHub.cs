@@ -1,37 +1,36 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using ScreenR.Shared;
 using ScreenR.Shared.Dtos;
+using ScreenR.Shared.Interfaces;
 using ScreenR.Shared.Models;
+using ScreenR.Web.Server.Data;
 using ScreenR.Web.Server.Models;
 using System.Collections.Concurrent;
 
 namespace ScreenR.Web.Server.Hubs
 {
-    public interface IDesktopHubClient
-    {
-        Task StartDesktopStream(StreamToken streamToken, string passphrase);
-    }
 
     public class DesktopHub : Hub<IDesktopHubClient>
     {
         private static readonly ConcurrentDictionary<StreamToken, StreamingSession> _streamingSessions = new();
-
+        private readonly IHubContext<UserHub, IUserHubClient> _userHubContext;
         private readonly ILogger<DesktopHub> _logger;
 
-        public DesktopHub(ILogger<DesktopHub> logger)
+        public DesktopHub(IHubContext<UserHub, IUserHubClient> userHubContext, ILogger<DesktopHub> logger)
         {
+            _userHubContext = userHubContext;
             _logger = logger;
         }
 
-        public DeviceInfo DeviceInfo
+        public DesktopDevice? DeviceInfo
         {
             get
             {
-                if (Context.Items[nameof(DeviceInfo)] is DeviceInfo deviceInfo)
+                if (Context.Items[nameof(DeviceInfo)] is DesktopDevice deviceInfo)
                 {
                     return deviceInfo;
                 }
-                return DeviceInfo.Empty;
+                return null;
             }
             set
             {
@@ -44,29 +43,36 @@ namespace ScreenR.Web.Server.Hubs
             return base.OnConnectedAsync();
         }
 
-        public override Task OnDisconnectedAsync(Exception? exception)
+        public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            return base.OnDisconnectedAsync(exception);
+            if (DeviceInfo is DesktopDevice device)
+            {
+                device.IsOnline = false;
+                await _userHubContext.Clients.All.NotifyDesktopDeviceUpdated(device);
+            }
+            await base.OnDisconnectedAsync(exception);
         }
 
-        public async Task SetDeviceInfo(DeviceInfo deviceInfo)
+        public async Task SetDeviceInfo(DesktopDevice device)
         {
-            DeviceInfo = deviceInfo;
+            DeviceInfo = device;
 
-            switch (deviceInfo.Type)
+            switch (device.Type)
             {
                 case Shared.Enums.ConnectionType.Unknown:
                 case Shared.Enums.ConnectionType.User:
                 case Shared.Enums.ConnectionType.Service:
-                    _logger.LogWarning("Unexpected connection type: {type}", deviceInfo.Type);
+                    _logger.LogWarning("Unexpected connection type: {type}", device.Type);
                     break;
                 case Shared.Enums.ConnectionType.Desktop:
-                    await Groups.AddToGroupAsync(Context.ConnectionId, deviceInfo.DesktopId.ToString());
+                    await Groups.AddToGroupAsync(Context.ConnectionId, device.SessionId.ToString());
                     break;
                 default:
-                    _logger.LogWarning("Unexpected connection type: {type}", deviceInfo.Type);
+                    _logger.LogWarning("Unexpected connection type: {type}", device.Type);
                     break;
             }
+
+            await _userHubContext.Clients.All.NotifyDesktopDeviceUpdated(device);
         }
 
         public async Task SendDesktopStream(StreamToken streamToken, IAsyncEnumerable<DesktopFrameChunk> stream)

@@ -13,7 +13,7 @@
 
 @code {
     private readonly Guid _desktopId = Guid.NewGuid();
-    private IEnumerable<DisplayInfo> _displays;
+    private IEnumerable<DisplayInfo> _displays = Enumerable.Empty<DisplayInfo>();
     private int _canvasWidth = 1920;
     private int _canvasHeight = 1080;
     private string _canvasClass = "fit";
@@ -34,7 +34,6 @@
 
             if (chunk.EndOfFrame)
             {
-                await Task.Delay(100);
                 ms.Seek(0, SeekOrigin.Begin);
                 DrawImageUnmarshalled(ms.ToArray(), chunk.Area);
                 ms.Dispose();

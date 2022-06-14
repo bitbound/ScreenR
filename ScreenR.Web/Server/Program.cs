@@ -13,16 +13,16 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddDbContext<AppDb>(options =>
     options.UseSqlite(connectionString));
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
+    .AddEntityFrameworkStores<AppDb>();
 
 builder.Services.AddIdentityServer()
-    .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
+    .AddApiAuthorization<ApplicationUser, AppDb>();
 
 builder.Services.AddAuthentication()
     .AddIdentityServerJwt();
@@ -71,5 +71,9 @@ app.MapHub<ServiceHub>("/service-hub");
 app.MapHub<DesktopHub>("/desktop-hub");
 app.MapHub<UserHub>("/user-hub");
 app.MapFallbackToFile("index.html");
+
+using var scope = app.Services.CreateScope();
+using var appDb = scope.ServiceProvider.GetRequiredService<AppDb>();
+await appDb.Database.MigrateAsync();
 
 app.Run();

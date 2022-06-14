@@ -1,17 +1,21 @@
-﻿using Duende.IdentityServer.EntityFramework.Options;
+﻿#nullable disable
+using Duende.IdentityServer.EntityFramework.Options;
 using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using ScreenR.Shared.Models;
 using ScreenR.Web.Server.Models;
 
 namespace ScreenR.Web.Server.Data
 {
-    public class ApplicationDbContext : ApiAuthorizationDbContext<ApplicationUser>
+    public class AppDb : ApiAuthorizationDbContext<ApplicationUser>
     {
-        public ApplicationDbContext(
+        public AppDb(
             DbContextOptions options,
             IOptions<OperationalStoreOptions> operationalStoreOptions) : base(options, operationalStoreOptions)
         {
         }
+
+        public DbSet<ServiceDevice> Devices { get; init; }
     }
 }

@@ -9,7 +9,7 @@ namespace ScreenR.Service.Services
     internal interface IAppState
     {
         Guid DeviceId { get; }
-        Uri? ServerUrl { get; }
+        Uri ServerUrl { get; }
     }
 
     internal class AppState : IAppState
@@ -20,11 +20,7 @@ namespace ScreenR.Service.Services
             DeviceId = deviceId;
         }
 
-        private AppState() {}
-
-        public static AppState Empty { get; } = new AppState();
-
         public Guid DeviceId { get; }
-        public Uri? ServerUrl { get; }
+        public Uri ServerUrl { get; }
     }
 }

@@ -11,8 +11,8 @@ using ScreenR.Web.Server.Data;
 namespace ScreenR.Web.Server.Migrations
 {
     [DbContext(typeof(AppDb))]
-    [Migration("20220610184126_Initial")]
-    partial class Initial
+    [Migration("20220614223945_Devices")]
+    partial class Devices
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -290,6 +290,49 @@ namespace ScreenR.Web.Server.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("ScreenR.Shared.Models.ServiceDevice", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Architecture")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ComputerName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Is64Bit")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsOnline")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("LastOnline")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OperatingSystem")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Platform")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProcessorCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Devices");
                 });
 
             modelBuilder.Entity("ScreenR.Web.Server.Models.ApplicationUser", b =>

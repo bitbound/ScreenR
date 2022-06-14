@@ -85,10 +85,13 @@ IHost BuildHost<TStartupAction>(AppState? appState = null)
         .ConfigureServices(services =>
         {
             services.AddHostedService<TStartupAction>();
-            services.AddHostedService<ServiceHubConnection>();
-            services.AddSingleton<IHubConnectionBuilder, HubConnectionBuilder>();
+            services.AddSingleton<IServiceHubConnection, ServiceHubConnection>();
+            services.AddSingleton<IHubConnectionBuilderFactory, HubConnectionBuilderFactory>();
 
-            services.AddSingleton<IAppState>(appState ?? AppState.Empty);
+            if (appState is not null)
+            {
+                services.AddSingleton<IAppState>(appState);
+            }
 
             if (OperatingSystem.IsWindows())
             {
@@ -96,7 +99,7 @@ IHost BuildHost<TStartupAction>(AppState? appState = null)
             }
             else if (OperatingSystem.IsLinux())
             {
-
+                services.AddScoped<IInstallerService, InstallerServiceLinux>();
             }
             else
             {

@@ -2,6 +2,7 @@
 using ScreenR.Shared.Helpers;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
@@ -11,10 +12,8 @@ using System.Threading.Tasks;
 namespace ScreenR.Shared.Models
 {
     [DataContract]
-    public class DeviceInfo
+    public class Device
     {
-        public static DeviceInfo Empty { get; } = new DeviceInfo();
-
         [DataMember]
         public Architecture Architecture { get; init; }
 
@@ -22,16 +21,10 @@ namespace ScreenR.Shared.Models
         public string ComputerName { get; init; } = string.Empty;
 
         [DataMember]
-        public Guid DesktopId { get; set; }
-
-        [DataMember]
-        public Guid DeviceId { get; init; }
-
-        [DataMember]
         public bool Is64Bit { get; init; }
 
         [DataMember]
-        public bool IsOnline { get; init; } = true;
+        public bool IsOnline { get; set; }
 
         [DataMember]
         public string OperatingSystem { get; init; } = string.Empty;
@@ -45,17 +38,35 @@ namespace ScreenR.Shared.Models
         [DataMember]
         public ConnectionType Type { get; init; }
 
-        public static DeviceInfo Create(
-            ConnectionType type,
-            bool isOnline,
+        [DataMember]
+        public DateTimeOffset LastOnline { get; internal set; }
+
+        public static ServiceDevice CreateService(
             Guid deviceId,
-            Guid desktopId)
+            bool isOnline)
         {
-            return new DeviceInfo()
+            return new ServiceDevice()
             {
-                Type = type,
+                Type = ConnectionType.Service,
                 DeviceId = deviceId,
-                DesktopId = desktopId,
+                IsOnline = isOnline,
+                Architecture = RuntimeInformation.OSArchitecture,
+                ComputerName = Environment.MachineName,
+                Is64Bit = Environment.Is64BitOperatingSystem,
+                OperatingSystem = RuntimeInformation.OSDescription,
+                Platform = EnvironmentHelper.Platform,
+                ProcessorCount = Environment.ProcessorCount
+            };
+        }
+
+        public static DesktopDevice CreateDesktop(
+            Guid sessionId,
+            bool isOnline)
+        {
+            return new DesktopDevice()
+            {
+                Type = ConnectionType.Desktop,
+                SessionId = sessionId,
                 IsOnline = isOnline,
                 Architecture = RuntimeInformation.OSArchitecture,
                 ComputerName = Environment.MachineName,

@@ -4,7 +4,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ScreenR.Shared.Enums;
 using ScreenR.Shared.Extensions;
+using ScreenR.Shared.Helpers;
 using ScreenR.Shared.Models;
+using ScreenR.Shared.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,52 +15,53 @@ using System.Threading.Tasks;
 
 namespace ScreenR.Service.Services
 {
-    internal class ServiceHubConnection : BackgroundService
+    internal interface IServiceHubConnection
     {
-        private readonly IServiceScopeFactory _scopeFactory;
-        private readonly IHubConnectionBuilder _hubConnectionBuilder;
+        HubConnection Connection { get; }
+        Task Connect();
+    }
+
+    internal class ServiceHubConnection : IServiceHubConnection
+    {
+        private readonly IHostApplicationLifetime _appLifetime;
         private readonly IAppState _appState;
         private readonly ILogger<ServiceHubConnection> _logger;
+        public HubConnection Connection { get; }
 
         public ServiceHubConnection(
-             IServiceScopeFactory scopeFactory,
-             IHubConnectionBuilder hubConnectionBuilder,
+             IHostApplicationLifetime appLifetime,
+             IHubConnectionBuilderFactory builderFactory,
              IAppState appState,
              ILogger<ServiceHubConnection> logger)
         {
-            _scopeFactory = scopeFactory;
-            _hubConnectionBuilder = hubConnectionBuilder;
+            _appLifetime = appLifetime;
             _appState = appState;
             _logger = logger;
+
+            Connection = builderFactory.CreateBuilder()
+                .WithUrl($"{_appState.ServerUrl.Trim()}/service-hub")
+                .AddMessagePackProtocol()
+                .WithAutomaticReconnect(new RetryPolicy())
+                .Build();
         }
 
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        public async Task Connect()
         {
-            if (_appState.ServerUrl is null)
-            {
-                throw new ArgumentNullException(nameof(_appState.ServerUrl));
-            }
 
-            var hubConnection = _hubConnectionBuilder
-              .WithUrl($"{_appState.ServerUrl.Trim()}/service-hub")
-              .AddMessagePackProtocol()
-              .WithAutomaticReconnect(new RetryPolicy())
-              .Build();
+            Connection.Reconnecting += HubConnection_Reconnecting; ;
+            Connection.Reconnected += HubConnection_Reconnected;
 
-            hubConnection.Reconnecting += HubConnection_Reconnecting; ;
-            hubConnection.Reconnected += HubConnection_Reconnected;
-
-            while (!stoppingToken.IsCancellationRequested)
+            while (!_appLifetime.ApplicationStopping.IsCancellationRequested)
             {
                 try
                 {
-                    await hubConnection.StartAsync(stoppingToken);
+                    await Connection.StartAsync(_appLifetime.ApplicationStopping);
                     _logger.LogInformation("Connected to server.");
 
-                    var deviceInfo = DeviceInfo.Create(ConnectionType.Service, true, _appState.DeviceId, Guid.Empty);
+                    var deviceInfo = Device.CreateService(_appState.DeviceId, true);
 
-                    await hubConnection.SendAsync("SetDeviceInfo", deviceInfo, cancellationToken: stoppingToken);
+                    await Connection.SendAsync("SetDeviceInfo", deviceInfo, cancellationToken: _appLifetime.ApplicationStopping);
                     break;
                 }
                 catch (HttpRequestException ex)
@@ -68,15 +71,16 @@ namespace ScreenR.Service.Services
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error in device hub connection.");
-                    await Task.Delay(3_000, stoppingToken);
+                    await Task.Delay(3_000, _appLifetime.ApplicationStopping);
                 }
             }
         }
 
-        private Task HubConnection_Reconnected(string? arg)
+        private async Task HubConnection_Reconnected(string? arg)
         {
+            var deviceInfo = Device.CreateService(_appState.DeviceId, true);
+            await Connection.SendAsync("SetDeviceInfo", deviceInfo);
             _logger.LogInformation("Reconnected to device hub.");
-            return Task.CompletedTask;
         }
 
         private Task HubConnection_Reconnecting(Exception? arg)

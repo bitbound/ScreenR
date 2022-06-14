@@ -1,30 +1,26 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using ScreenR.Shared.Dtos;
+using ScreenR.Shared.Interfaces;
 using ScreenR.Shared.Models;
 
 namespace ScreenR.Web.Server.Hubs
 {
-    public interface IUserHubClient
-    {
-
-    }
-
     [Authorize]
     public class UserHub : Hub<IUserHubClient>
     {
-        private readonly IHubContext<DesktopHub, IDesktopHubClient> _deviceHubContext;
+        private readonly IHubContext<DesktopHub, IDesktopHubClient> _desktopHubContext;
 
         public UserHub(IHubContext<DesktopHub, IDesktopHubClient> deviceHubContext)
         {
-            _deviceHubContext = deviceHubContext;
+            _desktopHubContext = deviceHubContext;
         }
 
         public async IAsyncEnumerable<DesktopFrameChunk> GetDesktopStream(Guid sessionId, Guid requestId, string passphrase)
         {
             var streamToken = new StreamToken(sessionId, requestId);
 
-            await _deviceHubContext.Clients
+            await _desktopHubContext.Clients
                 .Groups(sessionId.ToString())
                 .StartDesktopStream(streamToken, passphrase);
 
