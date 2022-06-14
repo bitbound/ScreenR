@@ -13,7 +13,7 @@ using System.Reflection;
 namespace ScreenR.Desktop.Windows.Tests
 {
     [TestClass]
-    [Ignore("Manual")]
+    //[Ignore("Manual")]
     public class ManualTests
     {
         private IEnumerable<DisplayInfo> _displays;
@@ -260,7 +260,7 @@ namespace ScreenR.Desktop.Windows.Tests
 
         private static SKBitmap GetImage(string frameFileName)
         {
-            using var mrs = Assembly.GetExecutingAssembly().GetManifestResourceStream($"ScreenR.Core.Windows.Tests.Resources.{frameFileName}");
+            using var mrs = Assembly.GetExecutingAssembly().GetManifestResourceStream($"ScreenR.Desktop.Windows.Tests.Resources.{frameFileName}");
             using var resourceImage = (Bitmap)Image.FromStream(mrs);
             return resourceImage.ToSKBitmap();
         }
