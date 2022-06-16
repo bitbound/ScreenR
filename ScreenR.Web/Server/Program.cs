@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using ScreenR.Web.Server.Data;
 using ScreenR.Web.Server.Hubs;
 using ScreenR.Web.Server.Models;
+using ScreenR.Web.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +38,8 @@ builder.Services
         config.MaximumReceiveMessageSize = 64_000;
     })
     .AddMessagePackProtocol();
+
+builder.Services.AddSingleton<IDeviceConnectionsCache, DeviceConnectionsCache>();
 
 var app = builder.Build();
 

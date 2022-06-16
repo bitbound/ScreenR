@@ -4,21 +4,24 @@ using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using ScreenR.Shared.Dtos;
+using ScreenR.Shared.Interfaces;
 using ScreenR.Shared.Models;
 using ScreenR.Shared.Services;
 using System.Net;
 
 namespace ScreenR.Web.Client.Services
 {
-    public interface IUserHubConnection
+    public interface IUserHubConnection : IUserHubClient
     {
-        HubConnection Connection { get; }
+        event EventHandler<DesktopDevice>? DesktopDeviceUpdated;
+        event EventHandler<ServiceDevice>? ServiceDeviceUpdated;
         Task Connect();
         IAsyncEnumerable<DesktopFrameChunk> GetDesktopStream(Guid sessionId, Guid requestId, string passphrase = "");
     }
 
     public class UserHubConnection : IUserHubConnection
     {
+        private readonly HubConnection _connection;
         private readonly IHttpMessageHandlerFactory _handlerFactory;
         private readonly ILogger<UserHubConnection> _logger;
         private readonly IServiceScopeFactory _scopeFactory;
@@ -33,7 +36,7 @@ namespace ScreenR.Web.Client.Services
             _handlerFactory = handlerFactory;
             _logger = logger;
 
-            Connection = builderFactory.CreateBuilder()
+            _connection = builderFactory.CreateBuilder()
                .WithUrl($"{hostEnv.BaseAddress.TrimEnd('/')}/user-hub", options =>
                {
                    options.HttpMessageHandlerFactory = (x) =>
@@ -46,16 +49,21 @@ namespace ScreenR.Web.Client.Services
                .Build();
         }
 
-        public HubConnection Connection { get; }
+        public event EventHandler<DesktopDevice>? DesktopDeviceUpdated;
+        public event EventHandler<ServiceDevice>? ServiceDeviceUpdated;
+
         public async Task Connect()
         {
-            if (Connection.State != HubConnectionState.Disconnected)
+            if (_connection.State != HubConnectionState.Disconnected)
             {
                 return;
             }
 
-            Connection.Reconnecting += HubConnection_Reconnecting;
-            Connection.Reconnected += HubConnection_Reconnected;
+            _connection.Reconnecting += HubConnection_Reconnecting;
+            _connection.Reconnected += HubConnection_Reconnected;
+
+            _connection.On<DesktopDevice>(nameof(NotifyDesktopDeviceUpdated), NotifyDesktopDeviceUpdated);
+            _connection.On<ServiceDevice>(nameof(NotifyServiceDeviceUpdated), NotifyServiceDeviceUpdated);
 
             while (true)
             {
@@ -67,7 +75,7 @@ namespace ScreenR.Web.Client.Services
 
                     if (authState.User.Identity?.IsAuthenticated == true)
                     {
-                        await Connection.StartAsync();
+                        await _connection.StartAsync();
                         _logger.LogInformation("Connected to server.");
                         break;
                     }
@@ -82,10 +90,22 @@ namespace ScreenR.Web.Client.Services
 
         public async IAsyncEnumerable<DesktopFrameChunk> GetDesktopStream(Guid sessionId, Guid requestId, string passphrase = "")
         {
-            await foreach (var chunk in Connection.StreamAsync<DesktopFrameChunk>("GetDesktopStream", sessionId, requestId, passphrase))
+            await foreach (var chunk in _connection.StreamAsync<DesktopFrameChunk>("GetDesktopStream", sessionId, requestId, passphrase))
             {
                 yield return chunk;
             }
+        }
+
+        public Task NotifyDesktopDeviceUpdated(DesktopDevice device)
+        {
+            TryInvoke(() => DesktopDeviceUpdated?.Invoke(this, device));
+            return Task.CompletedTask;
+        }
+
+        public Task NotifyServiceDeviceUpdated(ServiceDevice device)
+        {
+            TryInvoke(() => ServiceDeviceUpdated?.Invoke(this, device));
+            return Task.CompletedTask;
         }
 
         private Task HubConnection_Reconnected(string? arg)
@@ -98,6 +118,18 @@ namespace ScreenR.Web.Client.Services
         {
             _logger.LogWarning(arg, "Reconnecting to user hub.");
             return Task.CompletedTask;
+        }
+
+        private void TryInvoke(Action action)
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while invoking hub client method.");
+            }
         }
         private class RetryPolicy : IRetryPolicy
         {

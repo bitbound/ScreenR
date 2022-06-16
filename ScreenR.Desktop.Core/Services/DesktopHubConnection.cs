@@ -4,15 +4,14 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ScreenR.Desktop.Core.Interfaces;
 using ScreenR.Shared.Extensions;
+using ScreenR.Shared.Interfaces;
 using ScreenR.Shared.Models;
 using ScreenR.Shared.Services;
 
 namespace ScreenR.Desktop.Core.Services
 {
-    internal interface IDesktopHubConnection
+    internal interface IDesktopHubConnection : IDesktopHubClient
     {
-        HubConnection Connection { get; }
-
         Task Connect();
     }
 
@@ -20,32 +19,37 @@ namespace ScreenR.Desktop.Core.Services
     {
         private readonly IHostApplicationLifetime _appLifetime;
         private readonly IAppState _appState;
+        private readonly HubConnection _connection;
+        private readonly IDesktopStreamer _desktopStreamer;
         private readonly ILogger<DesktopHubConnection> _logger;
         private Device _deviceInfo;
 
         public DesktopHubConnection(
             IHostApplicationLifetime appLifetime,
             IAppState appState,
+            IDesktopStreamer desktopStreamer,
             IHubConnectionBuilderFactory builderFactory,
             ILogger<DesktopHubConnection> logger)
         {
             _appLifetime = appLifetime;
             _appState = appState;
+            _desktopStreamer = desktopStreamer;
             _logger = logger;
             _deviceInfo = Device.CreateDesktop(appState.DesktopId, true);
 
-            Connection = builderFactory.CreateBuilder()
+            _connection = builderFactory.CreateBuilder()
                 .WithUrl($"{appState.ServerUrl.Trim()}/desktop-hub")
                 .AddMessagePackProtocol()
                 .WithAutomaticReconnect(new RetryPolicy())
                 .Build();
         }
 
-        public HubConnection Connection { get; }
         public async Task Connect()
         {
-            Connection.Reconnecting += HubConnection_Reconnecting;
-            Connection.Reconnected += HubConnection_Reconnected;
+            _connection.Reconnecting += HubConnection_Reconnecting;
+            _connection.Reconnected += HubConnection_Reconnected;
+
+            _connection.On<StreamToken, string>(nameof(StartDesktopStream), StartDesktopStream);
 
             while (!_appLifetime.ApplicationStopping.IsCancellationRequested)
             {
@@ -53,11 +57,11 @@ namespace ScreenR.Desktop.Core.Services
                 {
                     _logger.LogInformation("Connecting to server.");
 
-                    await Connection.StartAsync(_appLifetime.ApplicationStopping);
+                    await _connection.StartAsync(_appLifetime.ApplicationStopping);
 
                     _logger.LogInformation("Connected to server.");
 
-                    await Connection.SendAsync("SetDeviceInfo", _deviceInfo, cancellationToken: _appLifetime.ApplicationStopping);
+                    await _connection.SendAsync("SetDeviceInfo", _deviceInfo, cancellationToken: _appLifetime.ApplicationStopping);
 
                     _logger.LogInformation("Created session with desktop process ID: {desktopId}", _appState.DesktopId);
                     break;
@@ -74,10 +78,23 @@ namespace ScreenR.Desktop.Core.Services
             }
         }
 
+        public async Task StartDesktopStream(StreamToken streamToken, string passphrase)
+        {
+            if (passphrase != _appState.Passphrase)
+            {
+                _logger.LogWarning("Invalid passphrase supplied: {passphrase}", passphrase);
+                return;
+            }
+
+            // TODO: Cancellation token.
+            // TODO: Throttle sender.
+            await _connection.SendAsync("SendDesktopStream", streamToken, _desktopStreamer.GetDesktopStream());
+        }
+
         private async Task HubConnection_Reconnected(string? arg)
         {
             _deviceInfo = Device.CreateDesktop(_appState.DesktopId, true);
-            await Connection.SendAsync("SetDeviceInfo", _deviceInfo);
+            await _connection.SendAsync("SetDeviceInfo", _deviceInfo);
             _logger.LogInformation("Reconnected to desktop hub.");
         }
 
@@ -86,7 +103,6 @@ namespace ScreenR.Desktop.Core.Services
             _logger.LogWarning(arg, "Reconnecting to desktop hub.");
             return Task.CompletedTask;
         }
-
         private class RetryPolicy : IRetryPolicy
         {
             public TimeSpan? NextRetryDelay(RetryContext retryContext)

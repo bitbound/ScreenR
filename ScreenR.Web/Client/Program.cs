@@ -14,15 +14,20 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddHttpClient("ScreenR.Web.ServerAPI", client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
     .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>();
 
+builder.Services.AddHttpClient<IApiClient>("ScreenR.Web.ServerAPI", client =>
+{
+    client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+});
+
 // Supply HttpClient instances that include access tokens when making requests to the server project
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("ScreenR.Web.ServerAPI"));
 
 builder.Services.AddSingleton<IUserHubConnection, UserHubConnection>();
-builder.Services.AddSingleton<IUserHubClient, UserHubMessageHandler>();
 builder.Services.AddSingleton<IHubConnectionBuilderFactory, HubConnectionBuilderFactory>();
 builder.Services.AddScoped<IJsInterop, JsInterop>();
 builder.Services.AddScoped<IToastService, ToastService>();
 builder.Services.AddScoped<IModalService, ModalService>();
+builder.Services.AddScoped<IApiClient, ApiClient>();
 
 builder.Logging.AddFilter("System.Net.Http.HttpClient.ScreenR.Web.ServerAPI", LogLevel.Warning);
 

@@ -15,13 +15,14 @@ namespace ScreenR.Shared.Models
     public class Device
     {
         [DataMember]
+        public string Alias { get; init; } = string.Empty;
+
+        [DataMember]
         public Architecture Architecture { get; init; }
 
         [DataMember]
         public string ComputerName { get; init; } = string.Empty;
 
-        [DataMember]
-        public bool Is64Bit { get; init; }
 
         [DataMember]
         public bool IsOnline { get; set; }
@@ -52,7 +53,6 @@ namespace ScreenR.Shared.Models
                 IsOnline = isOnline,
                 Architecture = RuntimeInformation.OSArchitecture,
                 ComputerName = Environment.MachineName,
-                Is64Bit = Environment.Is64BitOperatingSystem,
                 OperatingSystem = RuntimeInformation.OSDescription,
                 Platform = EnvironmentHelper.Platform,
                 ProcessorCount = Environment.ProcessorCount
@@ -70,7 +70,6 @@ namespace ScreenR.Shared.Models
                 IsOnline = isOnline,
                 Architecture = RuntimeInformation.OSArchitecture,
                 ComputerName = Environment.MachineName,
-                Is64Bit = Environment.Is64BitOperatingSystem,
                 OperatingSystem = RuntimeInformation.OSDescription,
                 Platform = EnvironmentHelper.Platform,
                 ProcessorCount = Environment.ProcessorCount

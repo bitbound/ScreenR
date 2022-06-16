@@ -5,6 +5,7 @@ using ScreenR.Shared.Interfaces;
 using ScreenR.Shared.Models;
 using ScreenR.Web.Server.Data;
 using ScreenR.Web.Server.Models;
+using ScreenR.Web.Server.Services;
 using System.Collections.Concurrent;
 
 namespace ScreenR.Web.Server.Hubs
@@ -14,11 +15,16 @@ namespace ScreenR.Web.Server.Hubs
     {
         private static readonly ConcurrentDictionary<StreamToken, StreamingSession> _streamingSessions = new();
         private readonly IHubContext<UserHub, IUserHubClient> _userHubContext;
+        private readonly IDeviceConnectionsCache _deviceCache;
         private readonly ILogger<DesktopHub> _logger;
 
-        public DesktopHub(IHubContext<UserHub, IUserHubClient> userHubContext, ILogger<DesktopHub> logger)
+        public DesktopHub(
+            IHubContext<UserHub, IUserHubClient> userHubContext,
+            IDeviceConnectionsCache deviceCache,
+            ILogger<DesktopHub> logger)
         {
             _userHubContext = userHubContext;
+            _deviceCache = deviceCache;
             _logger = logger;
         }
 
@@ -47,6 +53,7 @@ namespace ScreenR.Web.Server.Hubs
         {
             if (DeviceInfo is DesktopDevice device)
             {
+                _deviceCache.RemoveDesktopDevice(device);
                 device.IsOnline = false;
                 await _userHubContext.Clients.All.NotifyDesktopDeviceUpdated(device);
             }
@@ -56,6 +63,7 @@ namespace ScreenR.Web.Server.Hubs
         public async Task SetDeviceInfo(DesktopDevice device)
         {
             DeviceInfo = device;
+            _deviceCache.AddDesktopDevice(device);
 
             switch (device.Type)
             {
