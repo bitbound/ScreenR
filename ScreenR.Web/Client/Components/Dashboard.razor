@@ -54,7 +54,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var device in _serviceDevices)
+            @foreach (var device in _desktopDevices)
             {
                 <tr>
                     <td>@(device.ComputerName)</td>
@@ -101,7 +101,7 @@
         }
     }
 
-    private void OnDesktopDeviceUpdated(object? sender, DesktopDevice device)
+    private async void OnDesktopDeviceUpdated(object? sender, DesktopDevice device)
     {
         if (device.IsOnline)
         {
@@ -118,9 +118,10 @@
         {
             _desktopDevices.RemoveAll(x => x.SessionId == device.SessionId);
         }
+        await InvokeAsync(StateHasChanged);
     }
 
-    private void OnServiceDeviceUpdated(object? sender, ServiceDevice device)
+    private async void OnServiceDeviceUpdated(object? sender, ServiceDevice device)
     {
         if (device.IsOnline)
         {
@@ -137,6 +138,7 @@
         {
             _serviceDevices.RemoveAll(x => x.DeviceId == device.DeviceId);
         }
+        await InvokeAsync(StateHasChanged);
     }
 
     //private string? _desktopId;

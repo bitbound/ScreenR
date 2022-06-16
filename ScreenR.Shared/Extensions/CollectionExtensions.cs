@@ -33,7 +33,9 @@ namespace ScreenR.Shared.Extensions
 
         public static void RemoveAll<T>(this ObservableCollection<T> self, Predicate<T> predicate)
         {
-            var items = self.Where(x => predicate(x));
+            var items = self
+                .Where(x => predicate(x))
+                .ToArray();
 
             foreach (var item in items)
             {
