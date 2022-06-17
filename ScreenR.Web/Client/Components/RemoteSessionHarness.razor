@@ -1,0 +1,10 @@
+﻿<div class="remote-session-harness">
+    @foreach (var session in _remoteSessions)
+    {
+        <RemoteDisplay />
+    }
+</div>
+
+@code {
+    private readonly ObservableCollection<RemoteSession> _remoteSessions = new();
+}

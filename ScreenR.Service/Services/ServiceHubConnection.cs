@@ -59,7 +59,7 @@ namespace ScreenR.Service.Services
                     await Connection.StartAsync(_appLifetime.ApplicationStopping);
                     _logger.LogInformation("Connected to server.");
 
-                    var deviceInfo = Device.CreateService(_appState.DeviceId, true);
+                    var deviceInfo = DeviceHelper.CreateService(_appState.DeviceId, true);
 
                     await Connection.SendAsync("SetDeviceInfo", deviceInfo, cancellationToken: _appLifetime.ApplicationStopping);
                     break;
@@ -78,7 +78,7 @@ namespace ScreenR.Service.Services
 
         private async Task HubConnection_Reconnected(string? arg)
         {
-            var deviceInfo = Device.CreateService(_appState.DeviceId, true);
+            var deviceInfo = DeviceHelper.CreateService(_appState.DeviceId, true);
             await Connection.SendAsync("SetDeviceInfo", deviceInfo);
             _logger.LogInformation("Reconnected to device hub.");
         }

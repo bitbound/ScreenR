@@ -50,7 +50,7 @@ namespace ScreenR.Web.Server.Hubs
                 _deviceCache.RemoveServiceDevice(device);
                 device.IsOnline = false;
                 device.LastOnline = DateTimeOffset.Now;
-                await UpdateDeviceInDb(device);
+                device = await UpdateDeviceInDb(device);
                 await _userHubContext.Clients.All.NotifyServiceDeviceUpdated(device);
             }
 
@@ -63,39 +63,41 @@ namespace ScreenR.Web.Server.Hubs
                 case Shared.Enums.ConnectionType.Unknown:
                 case Shared.Enums.ConnectionType.User:
                 case Shared.Enums.ConnectionType.Desktop:
-                    _logger.LogWarning("Unexpected connection type: {type}", device.Type);
-                    break;
-                case Shared.Enums.ConnectionType.Service:
-                    await Groups.AddToGroupAsync(Context.ConnectionId, device.DeviceId.ToString());
-                    break;
                 default:
                     _logger.LogWarning("Unexpected connection type: {type}", device.Type);
+                    return;
+                case Shared.Enums.ConnectionType.Service:
+                    await Groups.AddToGroupAsync(Context.ConnectionId, device.DeviceId.ToString());
                     break;
             }
 
             device.LastOnline = DateTimeOffset.Now;
+            device = await UpdateDeviceInDb(device);
             _deviceCache.AddServiceDevice(device);
-            await UpdateDeviceInDb(device);
             DeviceInfo = device;
             await _userHubContext.Clients.All.NotifyServiceDeviceUpdated(device);
         }
 
-        private async Task UpdateDeviceInDb(ServiceDevice device)
+        private async Task<ServiceDevice> UpdateDeviceInDb(ServiceDevice device)
         {
-            var existingEntity = await _appDb.Devices.FindAsync(device.Id);
+            var dbEntity = await _appDb.Devices.FirstOrDefaultAsync(x => x.DeviceId == device.DeviceId);
 
-            if (existingEntity is not null)
+            if (dbEntity is not null)
             {
-                var entry = _appDb.Entry(existingEntity);
+                device.Id = dbEntity.Id;
+                var entry = _appDb.Entry(dbEntity);
                 entry.CurrentValues.SetValues(device);
                 entry.State = EntityState.Modified;
             }
             else
             {
-                await _appDb.Devices.AddAsync(device);
+                var result = await _appDb.Devices.AddAsync(device);
+                dbEntity = result.Entity;
             }
 
             await _appDb.SaveChangesAsync();
+
+            return dbEntity;
         }
     }
 }

@@ -17,6 +17,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenR.Service", "ScreenR.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenR.Shared", "ScreenR.Shared\ScreenR.Shared.csproj", "{215202B9-CB0C-41B4-9FB8-2C4B305E2C5F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D42912B6-84CA-4B96-9D3A-FA7E12266260}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		ScreenR.sln.startup.json = ScreenR.sln.startup.json
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

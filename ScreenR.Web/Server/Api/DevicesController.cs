@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ScreenR.Shared.Models;
+using ScreenR.Web.Server.Data;
 using ScreenR.Web.Server.Services;
 
 namespace ScreenR.Web.Server.Api
@@ -10,10 +12,12 @@ namespace ScreenR.Web.Server.Api
     public class DevicesController : ControllerBase
     {
         private readonly IDeviceConnectionsCache _deviceCache;
+        private readonly AppDb _appDb;
 
-        public DevicesController(IDeviceConnectionsCache deviceCache)
+        public DevicesController(AppDb appDb, IDeviceConnectionsCache deviceCache)
         {
             _deviceCache = deviceCache;
+            _appDb = appDb;
         }
 
 
@@ -24,9 +28,9 @@ namespace ScreenR.Web.Server.Api
         }
 
         [HttpGet("service")]
-        public IEnumerable<ServiceDevice> GetServiceDevices()
+        public async Task<IEnumerable<ServiceDevice>> GetServiceDevices()
         {
-            return _deviceCache.GetServiceDevices();
+            return await _appDb.Devices.ToListAsync();
         }
     }
 }

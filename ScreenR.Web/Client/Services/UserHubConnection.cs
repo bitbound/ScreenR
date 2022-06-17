@@ -39,10 +39,18 @@ namespace ScreenR.Web.Client.Services
             _connection = builderFactory.CreateBuilder()
                .WithUrl($"{hostEnv.BaseAddress.TrimEnd('/')}/user-hub", options =>
                {
+                   //options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
                    options.HttpMessageHandlerFactory = (x) =>
                    {
                        return _handlerFactory.CreateHandler("ScreenR.Web.ServerAPI");
                    };
+               })
+               .ConfigureLogging(x =>
+               {
+                   if (Uri.TryCreate(hostEnv.BaseAddress, UriKind.Absolute, out var result) && result.IsLoopback)
+                   {
+                       x.SetMinimumLevel(LogLevel.Debug);
+                   }
                })
                .AddMessagePackProtocol()
                .WithAutomaticReconnect(new RetryPolicy())

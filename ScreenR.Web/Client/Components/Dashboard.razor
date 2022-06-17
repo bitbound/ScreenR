@@ -1,5 +1,6 @@
 ﻿@implements IDisposable
 @using ScreenR.Shared.Dtos
+@using ScreenR.Shared.Helpers
 @using ScreenR.Shared.Models
 @inject IUserHubConnection UserHub
 @inject IJsInterop JsInterop
@@ -9,14 +10,16 @@
 <h3>Dashboard</h3>
 
 <h4 class="mt-5">Service Devices</h4>
-<div class="shadow-sm p-3 mt-3 rounded">
+<div class="shadow-sm p-3 mt-3 rounded overflow-auto">
     <table class="table table-striped table-responsive">
         <thead>
             <tr>
+                <th>Online</th>
                 <th>Computer Name</th>
                 <th>Alias</th>
-                <th>Online</th>
                 <th>Last Online</th>
+                <th>Storage Used</th>
+                <th>Total Storage</th>
                 <th>Operating System</th>
                 <th>CPU Architecture</th>
                 <th>Processors</th>
@@ -26,10 +29,21 @@
             @foreach (var device in _serviceDevices)
             {
                 <tr>
+                    <td>
+                        @if (device.IsOnline)
+                        {
+                            <span class="dot online" />
+                        }
+                        else
+                        {
+                            <span class="dot offline" />
+                        }
+                    </td>
                     <td>@(device.ComputerName)</td>
                     <td>@(device.Alias)</td>
-                    <td>@(device.IsOnline)</td>
                     <td>@(device.LastOnline)</td>
+                    <td>@(DeviceHelper.GetFormattedStoragePercent(device))</td>
+                    <td>@(device.TotalStorage)GB</td>
                     <td>@(device.OperatingSystem)</td>
                     <td>@(device.Architecture)</td>
                     <td>@(device.ProcessorCount)</td>
@@ -40,14 +54,16 @@
 </div>
 
 <h4 class="mt-5">Desktop Devices</h4>
-<div class="shadow-sm p-3 mt-3 rounded">
+<div class="shadow-sm p-3 mt-3 rounded overflow-auto">
     <table class="table table-striped table-responsive">
         <thead>
             <tr>
+                <th>Online</th>
                 <th>Computer Name</th>
                 <th>Alias</th>
-                <th>Online</th>
                 <th>Last Online</th>
+                <th>Storage Used</th>
+                <th>Total Storage</th>
                 <th>Operating System</th>
                 <th>CPU Architecture</th>
                 <th>Processors</th>
@@ -57,10 +73,21 @@
             @foreach (var device in _desktopDevices)
             {
                 <tr>
+                    <td>
+                        @if (device.IsOnline)
+                        {
+                            <span class="dot online" />
+                        }
+                        else
+                        {
+                            <span class="dot offline" />
+                        }
+                    </td>
                     <td>@(device.ComputerName)</td>
                     <td>@(device.Alias)</td>
-                    <td>@(device.IsOnline)</td>
                     <td>@(device.LastOnline)</td>
+                    <td>@(DeviceHelper.GetFormattedStoragePercent(device))</td>
+                    <td>@(device.TotalStorage)GB</td>
                     <td>@(device.OperatingSystem)</td>
                     <td>@(device.Architecture)</td>
                     <td>@(device.ProcessorCount)</td>
@@ -103,40 +130,26 @@
 
     private async void OnDesktopDeviceUpdated(object? sender, DesktopDevice device)
     {
-        if (device.IsOnline)
+        if (_desktopDevices.TryFindIndex(x => x.SessionId == device.SessionId, out var index))
         {
-            if (_desktopDevices.TryFindIndex(x => x.SessionId == device.SessionId, out var index))
-            {
-                _desktopDevices[index] = device;
-            }
-            else
-            {
-                _desktopDevices.Add(device);
-            }
+            _desktopDevices[index] = device;
         }
         else
         {
-            _desktopDevices.RemoveAll(x => x.SessionId == device.SessionId);
+            _desktopDevices.Add(device);
         }
         await InvokeAsync(StateHasChanged);
     }
 
     private async void OnServiceDeviceUpdated(object? sender, ServiceDevice device)
     {
-        if (device.IsOnline)
+        if (_serviceDevices.TryFindIndex(x => x.DeviceId == device.DeviceId, out var index))
         {
-            if (_serviceDevices.TryFindIndex(x => x.DeviceId == device.DeviceId, out var index))
-            {
-                _serviceDevices[index] = device;
-            }
-            else
-            {
-                _serviceDevices.Add(device);
-            }
+            _serviceDevices[index] = device;
         }
         else
         {
-            _serviceDevices.RemoveAll(x => x.DeviceId == device.DeviceId);
+            _serviceDevices.Add(device);
         }
         await InvokeAsync(StateHasChanged);
     }

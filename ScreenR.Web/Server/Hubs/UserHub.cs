@@ -6,7 +6,7 @@ using ScreenR.Shared.Models;
 
 namespace ScreenR.Web.Server.Hubs
 {
-    [Authorize]
+    //[Authorize]
     public class UserHub : Hub<IUserHubClient>
     {
         private readonly IHubContext<DesktopHub, IDesktopHubClient> _desktopHubContext;

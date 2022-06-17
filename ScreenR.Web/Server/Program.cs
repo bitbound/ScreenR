@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using ScreenR.Web.Server;
 using ScreenR.Web.Server.Data;
 using ScreenR.Web.Server.Hubs;
 using ScreenR.Web.Server.Models;
@@ -28,6 +29,9 @@ builder.Services.AddIdentityServer()
 builder.Services.AddAuthentication()
     .AddIdentityServerJwt();
 
+builder.Services.TryAddEnumerable(
+    ServiceDescriptor.Singleton<IPostConfigureOptions<JwtBearerOptions>, ConfigureJwtBearerOptions>());
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
@@ -36,6 +40,7 @@ builder.Services
     {
         config.MaximumParallelInvocationsPerClient = 3;
         config.MaximumReceiveMessageSize = 64_000;
+        config.EnableDetailedErrors = builder.Environment.IsDevelopment();
     })
     .AddMessagePackProtocol();
 
@@ -78,5 +83,11 @@ app.MapFallbackToFile("index.html");
 using var scope = app.Services.CreateScope();
 using var appDb = scope.ServiceProvider.GetRequiredService<AppDb>();
 await appDb.Database.MigrateAsync();
+
+foreach (var device in appDb.Devices)
+{
+    device.IsOnline = false;
+}
+await appDb.SaveChangesAsync();
 
 app.Run();

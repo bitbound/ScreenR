@@ -53,6 +53,7 @@ namespace ScreenR.Web.Server.Hubs
         {
             if (DeviceInfo is DesktopDevice device)
             {
+                device.LastOnline = DateTimeOffset.Now;
                 _deviceCache.RemoveDesktopDevice(device);
                 device.IsOnline = false;
                 await _userHubContext.Clients.All.NotifyDesktopDeviceUpdated(device);
@@ -62,6 +63,7 @@ namespace ScreenR.Web.Server.Hubs
 
         public async Task SetDeviceInfo(DesktopDevice device)
         {
+            device.LastOnline = DateTimeOffset.Now;
             DeviceInfo = device;
             _deviceCache.AddDesktopDevice(device);
 

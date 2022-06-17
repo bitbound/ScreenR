@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ScreenR.Desktop.Core.Interfaces;
 using ScreenR.Shared.Extensions;
+using ScreenR.Shared.Helpers;
 using ScreenR.Shared.Interfaces;
 using ScreenR.Shared.Models;
 using ScreenR.Shared.Services;
@@ -22,7 +23,7 @@ namespace ScreenR.Desktop.Core.Services
         private readonly HubConnection _connection;
         private readonly IDesktopStreamer _desktopStreamer;
         private readonly ILogger<DesktopHubConnection> _logger;
-        private Device _deviceInfo;
+        private DesktopDevice _deviceInfo;
 
         public DesktopHubConnection(
             IHostApplicationLifetime appLifetime,
@@ -35,7 +36,7 @@ namespace ScreenR.Desktop.Core.Services
             _appState = appState;
             _desktopStreamer = desktopStreamer;
             _logger = logger;
-            _deviceInfo = Device.CreateDesktop(appState.DesktopId, true);
+            _deviceInfo = DeviceHelper.CreateDesktop(appState.DesktopId, true);
 
             _connection = builderFactory.CreateBuilder()
                 .WithUrl($"{appState.ServerUrl.Trim()}/desktop-hub")
@@ -93,7 +94,7 @@ namespace ScreenR.Desktop.Core.Services
 
         private async Task HubConnection_Reconnected(string? arg)
         {
-            _deviceInfo = Device.CreateDesktop(_appState.DesktopId, true);
+            _deviceInfo = DeviceHelper.CreateDesktop(_appState.DesktopId, true);
             await _connection.SendAsync("SetDeviceInfo", _deviceInfo);
             _logger.LogInformation("Reconnected to desktop hub.");
         }

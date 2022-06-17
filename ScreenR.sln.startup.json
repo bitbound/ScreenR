@@ -1,0 +1,22 @@
+{
+  "Version": 3,
+  "ListAllProjects": false,
+  "MultiProjectConfigurations": {
+    "Service/Desktop/Server": {
+      "Projects": {
+        "ScreenR.Web.Server": {
+          "ProfileName": "ScreenR.Web.Server",
+          "StartProject": true
+        },
+        "ScreenR.Service": {
+          "ProfileName": "ScreenR.Service",
+          "StartProject": true
+        },
+        "ScreenR.Desktop.Windows": {
+          "ProfileName": "ScreenR.Desktop.Windows",
+          "StartProject": true
+        }
+      }
+    }
+  }
+}

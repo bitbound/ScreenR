@@ -11,8 +11,7 @@ namespace ScreenR.Shared.Models
     public class ServiceDevice : Device
     {
         [DataMember]
-        [Key]
-        public int Id { get; init; } = -1;
+        public int Id { get; internal set; }
 
         [DataMember]
         public Guid DeviceId { get; init; }

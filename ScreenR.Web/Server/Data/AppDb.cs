@@ -17,5 +17,15 @@ namespace ScreenR.Web.Server.Data
         }
 
         public DbSet<ServiceDevice> Devices { get; init; }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            builder.Entity<ServiceDevice>()
+                .HasKey(x => x.Id);
+
+            builder.Entity<ServiceDevice>();
+        }
     }
 }
