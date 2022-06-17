@@ -28,6 +28,7 @@ builder.Services.AddScoped<IJsInterop, JsInterop>();
 builder.Services.AddScoped<IToastService, ToastService>();
 builder.Services.AddScoped<IModalService, ModalService>();
 builder.Services.AddScoped<IApiClient, ApiClient>();
+builder.Services.AddSingleton<IAppState, AppState>();
 
 builder.Logging.AddFilter("System.Net.Http.HttpClient.ScreenR.Web.ServerAPI", LogLevel.Warning);
 

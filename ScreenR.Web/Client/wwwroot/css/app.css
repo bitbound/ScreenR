@@ -64,6 +64,9 @@ a, .btn-link {
     }
 
 
+.pointer {
+    cursor: pointer;
+}
 
 /* Loading Animation */
 
