@@ -1,4 +1,9 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject NavigationManager Navigation
+@inject SignOutSessionStateManager SignOutManager
+
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">ScreenR</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -19,13 +24,44 @@
                 <span class="oi oi-plus" aria-hidden="true"></span> Counter
             </NavLink>
         </div>*@
+
+        <AuthorizeView>
+            <Authorized>
+                <div class="px-3 mt-5">
+                    <a class="btn btn-link text-light" href="authentication/profile">
+                        Account
+                    </a>
+                </div>
+                <div class="px-3 mt-2">
+                    <button class="btn btn-link text-light" @onclick="BeginSignOut">Log Out</button>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="px-3 mt-5">
+                    <a class="btn btn-link text-light" href="authentication/login">Log In</a>
+                </div>
+                @if (!_anyUsersInDb)
+                {
+                    <div class="px-3 mt-2">
+                        <a class="btn btn-link text-light" href="authentication/register">Register</a>
+                    </div>
+                }
+            </NotAuthorized>
+        </AuthorizeView>
     </nav>
 </div>
 
 @code {
     private bool collapseNavMenu = true;
+    private bool _anyUsersInDb;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private async Task BeginSignOut(MouseEventArgs args)
+    {
+        await SignOutManager.SetSignOutState();
+        Navigation.NavigateTo("authentication/logout");
+    }
 
     private void ToggleNavMenu()
     {

@@ -17,6 +17,22 @@
           "StartProject": true
         }
       }
+    },
+    "Service/Desktop/Server (Debug)": {
+      "Projects": {
+        "ScreenR.Web.Server": {
+          "ProfileName": "ScreenR.Web.Server (WASM Debug)",
+          "StartProject": true
+        },
+        "ScreenR.Service": {
+          "ProfileName": "ScreenR.Service",
+          "StartProject": true
+        },
+        "ScreenR.Desktop.Windows": {
+          "ProfileName": "ScreenR.Desktop.Windows",
+          "StartProject": true
+        }
+      }
     }
   }
 }

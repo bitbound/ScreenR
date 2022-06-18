@@ -10,8 +10,8 @@
 <h3>Dashboard</h3>
 
 <h4 class="mt-5">Service Devices</h4>
-<div class="shadow-sm p-3 mt-3 rounded">
-    <table class="table table-striped table-responsive">
+<div class="shadow-sm p-3 mt-3 rounded" style="overflow-x: auto">
+    <table class="table table-striped table-responsive"  style="overflow: visible">
         <thead>
             <tr>
                 <th>Online</th>
@@ -30,7 +30,7 @@
             @foreach (var device in _serviceDevices)
             {
                 <tr>
-                    <td>
+                    <td align="center">
                         @if (device.IsOnline)
                         {
                             <span class="dot online" />
@@ -41,7 +41,9 @@
                         }
                     </td>
                     <td>
-                             <DropdownButton ButtonClass="btn-primary">
+                        @if (device.IsOnline)
+                        {
+                            <DropdownButton ButtonClass="btn-primary">
                                 <ButtonContent>
                                     <i class="oi oi-bolt"></i>
                                     <span>Actions</span>
@@ -55,6 +57,7 @@
                                     </li> 
                                 </ChildListItems>
                             </DropdownButton>
+                        }
                     </td>
                     <td>@(device.ComputerName)</td>
                     <td>@(device.Alias)</td>
@@ -71,11 +74,12 @@
 </div>
 
 <h4 class="mt-5">Desktop Devices</h4>
-<div class="shadow-sm p-3 mt-3 rounded">
-    <table class="table table-striped table-responsive">
+<div class="shadow-sm p-3 mt-3 rounded" style="overflow-x: auto">
+    <table class="table table-striped table-responsive" style="overflow: visible">
         <thead>
             <tr>
                 <th>Online</th>
+                <th>Actions</th>
                 <th>Computer Name</th>
                 <th>Alias</th>
                 <th>Last Online</th>
@@ -90,7 +94,7 @@
             @foreach (var device in _desktopDevices)
             {
                 <tr>
-                    <td>
+                    <td align="center">
                         @if (device.IsOnline)
                         {
                             <span class="dot online" />
@@ -98,6 +102,25 @@
                         else
                         {
                             <span class="dot offline" />
+                        }
+                    </td>
+                    <td>
+                        @if (device.IsOnline)
+                        {
+                            <DropdownButton ButtonClass="btn-primary">
+                                <ButtonContent>
+                                    <i class="oi oi-bolt"></i>
+                                    <span>Actions</span>
+                                </ButtonContent>
+                                <ChildListItems>
+                                    <li>
+                                        <button class="dropdown-item" @onclick="() => StartRemoteControl(device)">
+                                            <i class="oi oi-laptop" title="Remote Control"></i>
+                                            <span class="ml-2">Remote Control</span>
+                                        </button>
+                                    </li> 
+                                </ChildListItems>
+                            </DropdownButton>
                         }
                     </td>
                     <td>@(device.ComputerName)</td>
@@ -117,6 +140,14 @@
 @code {
     private readonly ObservableCollection<DesktopDevice> _desktopDevices = new();
     private readonly ObservableCollection<ServiceDevice> _serviceDevices = new();
+
+    #nullable disable
+    [CascadingParameter]
+    public LoadingSignal Loader { get; init; }
+
+    [Inject]
+    public IToastService Toasts { get; init; }
+    #nullable enable
 
     public void Dispose()
     {
@@ -173,24 +204,13 @@
 
     private async Task StartRemoteControl(ServiceDevice device)
     {
-        
+        using var _ = Loader.Show("Sending request");
+        await Task.Delay(3000);
     }
 
-    //private string? _desktopId;
-
-    //public async Task Test()
-    //{
-    //    if (!Guid.TryParse(_desktopId, out var sessionResult))
-    //    {
-    //        await JsInterop.Alert("Desktop ID must be a valid GUID.");
-    //        return;
-    //    }
-
-    //    if (_desktop is null)
-    //    {
-    //        return;
-    //    }
-
-    //    await _desktop.GetStream(sessionResult);
-    //}
+      private async Task StartRemoteControl(DesktopDevice device)
+    {
+        using var _ = Loader.Show("Sending request");
+        await Task.Delay(3000);
+    }
 }

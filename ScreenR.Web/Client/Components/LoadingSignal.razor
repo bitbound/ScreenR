@@ -1,0 +1,33 @@
+﻿@using ScreenR.Shared
+
+@if (IsShown)
+{
+    <div class="overlay">
+        <div class="signal-frame">
+            <div class="signal"></div>
+            <div class="mt-2 font-weight-bold">
+                @(_message)
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string _message = string.Empty;
+
+    [Parameter]
+    public bool IsShown { get; set; }
+
+    public IDisposable Show(string message = "")
+    {
+        _message = message;
+        IsShown = true;
+        _ = InvokeAsync(StateHasChanged);
+        return new DisposalToken(async () =>
+        {
+            IsShown = false;
+            await InvokeAsync(StateHasChanged);
+        });
+    }
+
+}

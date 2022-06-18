@@ -1,21 +1,25 @@
 ﻿@inherits LayoutComponentBase
 
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
-
-    <main>
-        <div class="top-row px-4 auth">
-            <LoginDisplay />
+    <CascadingValue Value="@_loadingSignal">
+        <div class="sidebar">
+            <NavMenu />
         </div>
 
-        <article class="content px-4">
-            @Body
-        </article>
+        <main>
+            <article class="content px-4">
+                @Body
+            </article>
 
-        <ToastHarness />
-        <ModalHarness />
-        <RemoteSessionHarness />
-    </main>
+            <ToastHarness />
+            <ModalHarness />
+            <RemoteSessionHarness />
+            <LoadingSignal @ref="_loadingSignal" />
+        </main>
+    </CascadingValue>
+
 </div>
+
+@code {
+    private LoadingSignal? _loadingSignal;
+}
