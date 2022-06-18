@@ -77,7 +77,7 @@ body {
   position: absolute;
   bottom: 0;
   width: 100%;
-  overflow: scroll;
+  overflow: hidden;
   white-space: nowrap;
   line-height: 60px;
 }

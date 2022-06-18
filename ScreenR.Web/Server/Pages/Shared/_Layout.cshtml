@@ -10,20 +10,23 @@
     <title>@ViewData["Title"] - ScreenR</title>
 
     <environment include="Development">
-        <link rel="stylesheet" href="~/Identity/lib/bootstrap/dist/css/bootstrap.css" />
-        <link rel="stylesheet" href="~/Identity/css/site.css" />
+        @*<link rel="stylesheet" href="~/Identity/lib/bootstrap/dist/css/bootstrap.css" />*@
+        <link href="~/css/bootstrap/bootstrap.css" rel="stylesheet" />
+        @*<link rel="stylesheet" href="~/Identity/css/site.css" />*@
+        <link href="~/css/site.css" rel="stylesheet" />
     </environment>
     <environment exclude="Development">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css"
               integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous"
-              asp-fallback-href="~/Identity/lib/bootstrap/dist/css/bootstrap.min.css"
+              asp-fallback-href="~/css/bootstrap/bootstrap.min.css"
               asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
-        <link rel="stylesheet" href="~/Identity/css/site.css" asp-append-version="true" />
+        @*<link rel="stylesheet" href="~/Identity/css/site.css" asp-append-version="true" />*@
+        <link href="~/css/site.css" rel="stylesheet" asp-append-version="true" />
     </environment>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark border-bottom box-shadow mb-3">
             <div class="container">
                 <a class="navbar-brand" href="~/">ScreenR</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"

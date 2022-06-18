@@ -33,10 +33,16 @@ namespace ScreenR.Shared.Models
         public int ProcessorCount { get; init; }
 
         [DataMember]
+        public double TotalMemory { get; init; }
+
+        [DataMember]
         public double TotalStorage { get; init; }
 
         [DataMember]
         public ConnectionType Type { get; init; }
+
+        [DataMember]
+        public double UsedMemory { get; init; }
 
         [DataMember]
         public double UsedStorage { get; init; }
