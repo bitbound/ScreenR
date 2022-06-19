@@ -5,10 +5,22 @@
 .top-row {
     height: 3.5rem;
     background-color: rgba(0,0,0,0.4);
+    justify-content: flex-end;
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
 }
 
 .navbar-brand {
     font-size: 1.1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btn-link {
+    white-space: nowrap;
+    margin-left: 1.5rem;
+    text-decoration: none;
 }
 
 .oi {
