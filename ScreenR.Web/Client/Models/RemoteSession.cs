@@ -2,5 +2,6 @@
 {
     public class RemoteSession
     {
+        public Guid SessionId { get; set; }
     }
 }

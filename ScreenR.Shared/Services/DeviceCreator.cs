@@ -113,7 +113,7 @@ namespace ScreenR.Shared.Services
                         {
                             var memoryStatus = new MemoryStatusEx();
 
-                            if (Kernel32.GlobalMemoryStatusEx(memoryStatus))
+                            if (Kernel32Ex.GlobalMemoryStatusEx(memoryStatus))
                             {
                                 return Math.Round((double)memoryStatus.ullTotalPhys / 1024 / 1024 / 1024, 2);
                             }
@@ -154,7 +154,7 @@ namespace ScreenR.Shared.Services
                     case Platform.Windows:
                         {
                             var memoryStatus = new MemoryStatusEx();
-                            if (Kernel32.GlobalMemoryStatusEx(memoryStatus))
+                            if (Kernel32Ex.GlobalMemoryStatusEx(memoryStatus))
                             {
                                 var freeGB = Math.Round((double)memoryStatus.ullAvailPhys / 1024 / 1024 / 1024, 2);
                                 return totalGb - freeGB;

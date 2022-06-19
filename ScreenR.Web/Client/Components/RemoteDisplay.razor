@@ -5,42 +5,39 @@
 @inject IJSRuntime JsRuntime
 @inject IUserHubConnection UserHub
 
-<canvas id="desktopCanvas" 
-    @ref="_canvasRef" 
-    width="@_canvasWidth" 
-    height="@_canvasHeight"
-    class="@_canvasClass" />
+<div class="display-wrapper @Class">
+    <div class="title-bar">
+
+    </div>
+    <div class="content-area">
+        <canvas id="desktopCanvas" 
+            @ref="_canvasRef" 
+            width="@_canvasWidth" 
+            height="@_canvasHeight"
+            class="@_canvasClass" />
+    </div>
+</div>
 
 @code {
     private readonly Guid _desktopId = Guid.NewGuid();
     private IEnumerable<DisplayInfo> _displays = Enumerable.Empty<DisplayInfo>();
-    private int _canvasWidth = 1920;
-    private int _canvasHeight = 1080;
+    private int _canvasWidth = 0;
+    private int _canvasHeight = 0;
     private string _canvasClass = "fit";
 
     private ElementReference _canvasRef;
     private IJSObjectReference? _module;
 
+    #nullable disable
 
-    public async Task GetStream(Guid sessionId)
-    {
-        // TODO.
-        //_displays = await UserHub.GetDisplays();
+    [Parameter]
+    public string Class { get; set; } = string.Empty;
 
-        var ms = new MemoryStream();
-        await foreach (var chunk in UserHub.GetDesktopStream(sessionId, _desktopId))
-        {
-            await ms.WriteAsync(chunk.ImageBytes);
+    [Parameter, EditorRequired]
+    public RemoteSession Session { get; set; }
 
-            if (chunk.EndOfFrame)
-            {
-                ms.Seek(0, SeekOrigin.Begin);
-                DrawImageUnmarshalled(ms.ToArray(), chunk.Area);
-                ms.Dispose();
-                ms = new();
-            }
-        }
-    }
+    #nullable enable
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -49,6 +46,8 @@
         {
             _module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/RemoteDesktop.razor.js");
         }
+
+        await GetStream(Session.SessionId);
     }
 
     private async Task DrawImage(byte[] imageBytes, Rectangle destinationArea)
@@ -73,5 +72,23 @@
         Console.WriteLine(result);
     }
 
+    private async Task GetStream(Guid sessionId)
+    {
+        // TODO.
+        //_displays = await UserHub.GetDisplays();
 
+        var ms = new MemoryStream();
+        await foreach (var chunk in UserHub.GetDesktopStream(sessionId, _desktopId))
+        {
+            await ms.WriteAsync(chunk.ImageBytes);
+
+            if (chunk.EndOfFrame)
+            {
+                ms.Seek(0, SeekOrigin.Begin);
+                DrawImageUnmarshalled(ms.ToArray(), chunk.Area);
+                ms.Dispose();
+                ms = new();
+            }
+        }
+    }
 }

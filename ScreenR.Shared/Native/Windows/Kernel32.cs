@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ScreenR.Shared.Native.Windows
 {
-    public static class Kernel32
+    public static class Kernel32Ex
     {
         [return: MarshalAs(UnmanagedType.Bool)]
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]

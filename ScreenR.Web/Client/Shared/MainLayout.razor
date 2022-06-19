@@ -9,11 +9,11 @@
         <main>
             <article class="content px-4">
                 @Body
+                <RemoteSessionHarness />
             </article>
 
             <ToastHarness />
             <ModalHarness />
-            <RemoteSessionHarness />
             <LoadingSignal @ref="_loadingSignal" />
         </main>
     </CascadingValue>

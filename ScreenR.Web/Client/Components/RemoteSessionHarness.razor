@@ -1,10 +1,28 @@
-﻿<div class="remote-session-harness">
-    @foreach (var session in _remoteSessions)
+﻿@using System.Collections.Specialized
+@implements IDisposable
+@inject IAppState AppState
+
+<div class="remote-session-harness">
+    @foreach (var session in AppState.RemoteSessions)
     {
-        <RemoteDisplay />
+        <RemoteDisplay Session="@session" />
     }
 </div>
 
 @code {
-    private readonly ObservableCollection<RemoteSession> _remoteSessions = new();
+    public void Dispose()
+    {
+        AppState.RemoteSessions.CollectionChanged -= OnRemoteSessionsChanged;
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        AppState.RemoteSessions.CollectionChanged += OnRemoteSessionsChanged;
+        return base.OnInitializedAsync();
+    }
+
+    private async void OnRemoteSessionsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        await InvokeAsync(StateHasChanged);
+    }
 }

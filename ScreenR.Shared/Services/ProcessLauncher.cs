@@ -1,16 +1,21 @@
 ﻿using Microsoft.Extensions.Logging;
+using PInvoke;
+using ScreenR.Shared.Native.Windows;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Kernel32 = PInvoke.Kernel32;
 
 namespace ScreenR.Shared.Services
 {
     public interface IProcessLauncher
     {
         Task<Result<string>> GetProcessOutput(string command, string arguments = "", int msTimeout = 10000);
+        Task<Result> LaunchDesktopStreamer(Guid requestId, string requesterConnectionId);
     }
 
     internal class ProcessLauncher : IProcessLauncher
@@ -54,5 +59,19 @@ namespace ScreenR.Shared.Services
                 return Result.Fail<string>(ex);
             }
         }
+
+        public async Task<Result> LaunchDesktopStreamer(Guid requestId, string requesterConnectionId)
+        {
+            try
+            {
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while launching desktop streamer.");
+                return Result.Fail(ex);
+            }
+        }
+
     }
 }

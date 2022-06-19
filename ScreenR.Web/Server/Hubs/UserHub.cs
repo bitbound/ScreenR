@@ -10,10 +10,14 @@ namespace ScreenR.Web.Server.Hubs
     public class UserHub : Hub<IUserHubClient>
     {
         private readonly IHubContext<DesktopHub, IDesktopHubClient> _desktopHubContext;
+        private readonly IHubContext<ServiceHub, IServiceHubClient> _serviceHubContext;
 
-        public UserHub(IHubContext<DesktopHub, IDesktopHubClient> deviceHubContext)
+        public UserHub(
+            IHubContext<DesktopHub, IDesktopHubClient> deviceHubContext,
+            IHubContext<ServiceHub, IServiceHubClient> serviceHubContext)
         {
             _desktopHubContext = deviceHubContext;
+            _serviceHubContext = serviceHubContext;
         }
 
         public async IAsyncEnumerable<DesktopFrameChunk> GetDesktopStream(Guid sessionId, Guid requestId, string passphrase)
@@ -53,6 +57,13 @@ namespace ScreenR.Web.Server.Hubs
         public override Task OnDisconnectedAsync(Exception? exception)
         {
             return base.OnDisconnectedAsync(exception);
+        }
+
+        public async Task RequestDesktopStream(Guid deviceId, Guid requestId)
+        {
+            await _serviceHubContext.Clients
+                .Group(deviceId.ToString())
+                .RequestDesktopStream(requestId, Context.ConnectionId);
         }
     }
 }

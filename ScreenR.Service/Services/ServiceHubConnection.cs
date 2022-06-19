@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ScreenR.Shared.Enums;
 using ScreenR.Shared.Extensions;
+using ScreenR.Shared.Interfaces;
 using ScreenR.Shared.Models;
 using ScreenR.Shared.Services;
 using System;
@@ -20,11 +21,12 @@ namespace ScreenR.Service.Services
         Task Connect();
     }
 
-    internal class ServiceHubConnection : IServiceHubConnection
+    internal class ServiceHubConnection : IServiceHubConnection, IServiceHubClient
     {
         private readonly IHostApplicationLifetime _appLifetime;
         private readonly IAppState _appState;
         private readonly IDeviceCreator _deviceCreator;
+        private readonly IProcessLauncher _processLauncher;
         private readonly ILogger<ServiceHubConnection> _logger;
         public HubConnection Connection { get; }
 
@@ -33,11 +35,13 @@ namespace ScreenR.Service.Services
              IHubConnectionBuilderFactory builderFactory,
              IAppState appState,
              IDeviceCreator deviceCreator,
+             IProcessLauncher processLauncher,
              ILogger<ServiceHubConnection> logger)
         {
             _appLifetime = appLifetime;
             _appState = appState;
             _deviceCreator = deviceCreator;
+            _processLauncher = processLauncher;
             _logger = logger;
 
             Connection = builderFactory.CreateBuilder()
@@ -89,6 +93,11 @@ namespace ScreenR.Service.Services
         {
             _logger.LogWarning(arg, "Reconnecting to device hub.");
             return Task.CompletedTask;
+        }
+
+        public async Task RequestDesktopStream(Guid requestId, string requesterConnectionId)
+        {
+            await _processLauncher.LaunchDesktopStreamer(requestId, requesterConnectionId);
         }
 
         private class RetryPolicy : IRetryPolicy

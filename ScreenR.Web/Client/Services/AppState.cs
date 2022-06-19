@@ -8,6 +8,7 @@ namespace ScreenR.Web.Client.Services
     public interface IAppState
     {
         event PropertyChangedEventHandler? PropertyChanged;
+        ObservableCollection<RemoteSession> RemoteSessions { get; }
     }
 
     public class AppState : ObservableObject, IAppState

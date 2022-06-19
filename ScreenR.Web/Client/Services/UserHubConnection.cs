@@ -17,6 +17,7 @@ namespace ScreenR.Web.Client.Services
         event EventHandler<ServiceDevice>? ServiceDeviceUpdated;
         Task Connect();
         IAsyncEnumerable<DesktopFrameChunk> GetDesktopStream(Guid sessionId, Guid requestId, string passphrase = "");
+        Task RequestDesktopStream(Guid deviceId, Guid requestId);
     }
 
     public class UserHubConnection : IUserHubConnection
@@ -114,6 +115,11 @@ namespace ScreenR.Web.Client.Services
         {
             TryInvoke(() => ServiceDeviceUpdated?.Invoke(this, device));
             return Task.CompletedTask;
+        }
+
+        public async Task RequestDesktopStream(Guid deviceId, Guid requestId)
+        {
+            await _connection.InvokeAsync(nameof(RequestDesktopStream), deviceId, requestId);
         }
 
         private Task HubConnection_Reconnected(string? arg)

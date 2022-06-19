@@ -5,6 +5,7 @@
 @inject IUserHubConnection UserHub
 @inject IJsInterop JsInterop
 @inject IApiClient ApiClient
+@inject IAppState AppState
 @inject ILogger<Dashboard> Logger
 
 <h3>Dashboard</h3>
@@ -170,6 +171,8 @@
         UserHub.DesktopDeviceUpdated += OnDesktopDeviceUpdated;
         UserHub.ServiceDeviceUpdated += OnServiceDeviceUpdated;
 
+        using var _ = Loader.Show("Getting devices");
+
         try
         {
             var serviceDevices = await ApiClient.GetServiceDevices();
@@ -184,10 +187,10 @@
         }
     }
 
-    
+
     private string GetFormattedPercent(double used, double total)
     {
-          return $"{Math.Round(used / total * 100)}%";
+        return $"{Math.Round(used / total * 100)}%";
     }
 
     private async void OnDesktopDeviceUpdated(object? sender, DesktopDevice device)
@@ -219,6 +222,8 @@
     private async Task StartRemoteControl(ServiceDevice device)
     {
         using var _ = Loader.Show("Sending request");
+        var requestId = Guid.NewGuid();
+        await UserHub.RequestDesktopStream(device.DeviceId, requestId);
         await Task.Delay(3000);
     }
 
