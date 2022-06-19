@@ -4,7 +4,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ScreenR.Shared.Enums;
 using ScreenR.Shared.Extensions;
-using ScreenR.Shared.Helpers;
 using ScreenR.Shared.Models;
 using ScreenR.Shared.Services;
 using System;
@@ -25,6 +24,7 @@ namespace ScreenR.Service.Services
     {
         private readonly IHostApplicationLifetime _appLifetime;
         private readonly IAppState _appState;
+        private readonly IDeviceCreator _deviceCreator;
         private readonly ILogger<ServiceHubConnection> _logger;
         public HubConnection Connection { get; }
 
@@ -32,10 +32,12 @@ namespace ScreenR.Service.Services
              IHostApplicationLifetime appLifetime,
              IHubConnectionBuilderFactory builderFactory,
              IAppState appState,
+             IDeviceCreator deviceCreator,
              ILogger<ServiceHubConnection> logger)
         {
             _appLifetime = appLifetime;
             _appState = appState;
+            _deviceCreator = deviceCreator;
             _logger = logger;
 
             Connection = builderFactory.CreateBuilder()
@@ -59,7 +61,7 @@ namespace ScreenR.Service.Services
                     await Connection.StartAsync(_appLifetime.ApplicationStopping);
                     _logger.LogInformation("Connected to server.");
 
-                    var deviceInfo = DeviceHelper.CreateService(_appState.DeviceId, true);
+                    var deviceInfo = _deviceCreator.CreateService(_appState.DeviceId, true);
 
                     await Connection.SendAsync("SetDeviceInfo", deviceInfo, cancellationToken: _appLifetime.ApplicationStopping);
                     break;
@@ -78,7 +80,7 @@ namespace ScreenR.Service.Services
 
         private async Task HubConnection_Reconnected(string? arg)
         {
-            var deviceInfo = DeviceHelper.CreateService(_appState.DeviceId, true);
+            var deviceInfo = _deviceCreator.CreateService(_appState.DeviceId, true);
             await Connection.SendAsync("SetDeviceInfo", deviceInfo);
             _logger.LogInformation("Reconnected to device hub.");
         }

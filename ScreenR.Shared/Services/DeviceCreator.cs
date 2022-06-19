@@ -1,4 +1,5 @@
 ﻿using ScreenR.Shared.Enums;
+using ScreenR.Shared.Helpers;
 using ScreenR.Shared.Models;
 using ScreenR.Shared.Native.Windows;
 using System;
@@ -8,13 +9,25 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Shared.Helpers
+namespace ScreenR.Shared.Services
 {
-    internal class DeviceHelper
+    public interface IDeviceCreator
     {
-        private static DriveInfo? _systemDrive;
+        DesktopDevice CreateDesktop(Guid sessionId, bool isOnline);
+        ServiceDevice CreateService(Guid deviceId, bool isOnline);
+    }
 
-        public static DesktopDevice CreateDesktop(
+    internal class DeviceCreator : IDeviceCreator
+    {
+        private readonly IProcessLauncher _processLauncher;
+        private DriveInfo? _systemDrive;
+
+        public DeviceCreator(IProcessLauncher processLauncher)
+        {
+            _processLauncher = processLauncher;
+        }
+
+        public DesktopDevice CreateDesktop(
             Guid sessionId,
             bool isOnline)
         {
@@ -37,7 +50,7 @@ namespace ScreenR.Shared.Helpers
             };
         }
 
-        public static ServiceDevice CreateService(
+        public ServiceDevice CreateService(
             Guid deviceId,
             bool isOnline)
         {
@@ -60,19 +73,9 @@ namespace ScreenR.Shared.Helpers
             };
         }
 
-        public static string GetFormattedStoragePercent(Device device)
+        private double GetMemInfoRow(string rowTitle)
         {
-            return $"{Math.Round(device.UsedStorage / device.TotalStorage * 100)}%";
-        }
-
-        public static string GetFormattedMemoryPercent(Device device)
-        {
-            return $"{Math.Round(device.UsedMemory / device.TotalMemory * 100)}%";
-        }
-
-        private static double GetMemInfoRow(string rowTitle)
-        {
-            var result = ProcessHelper.GetProcessOutput("cat", "/proc/meminfo").GetAwaiter().GetResult();
+            var result = _processLauncher.GetProcessOutput("cat", "/proc/meminfo").GetAwaiter().GetResult();
             if (!result.IsSuccess || result.Value is null)
             {
                 return 0;
@@ -100,7 +103,7 @@ namespace ScreenR.Shared.Helpers
             return Math.Round(totalKb / 1024 / 1024, 2);
         }
 
-        private static double GetTotalMemory()
+        private double GetTotalMemory()
         {
             try
             {
@@ -112,7 +115,7 @@ namespace ScreenR.Shared.Helpers
 
                             if (Kernel32.GlobalMemoryStatusEx(memoryStatus))
                             {
-                                return Math.Round(((double)memoryStatus.ullTotalPhys / 1024 / 1024 / 1024), 2);
+                                return Math.Round((double)memoryStatus.ullTotalPhys / 1024 / 1024 / 1024, 2);
                             }
                         }
                         break;
@@ -130,7 +133,7 @@ namespace ScreenR.Shared.Helpers
             return 0;
         }
 
-        private static double GetTotalStorage()
+        private double GetTotalStorage()
         {
             var result = TryGetSystemDrive();
 
@@ -142,7 +145,7 @@ namespace ScreenR.Shared.Helpers
             return Math.Round((double)(result.Value.TotalSize / 1024 / 1024 / 1024), 2);
         }
 
-        private static double GetUsedMemory(double totalGb)
+        private double GetUsedMemory(double totalGb)
         {
             try
             {
@@ -153,7 +156,7 @@ namespace ScreenR.Shared.Helpers
                             var memoryStatus = new MemoryStatusEx();
                             if (Kernel32.GlobalMemoryStatusEx(memoryStatus))
                             {
-                                var freeGB = Math.Round(((double)memoryStatus.ullAvailPhys / 1024 / 1024 / 1024), 2);
+                                var freeGB = Math.Round((double)memoryStatus.ullAvailPhys / 1024 / 1024 / 1024, 2);
                                 return totalGb - freeGB;
                             }
                         }
@@ -171,7 +174,7 @@ namespace ScreenR.Shared.Helpers
             return 0;
         }
 
-        private static double GetUsedStorage()
+        private double GetUsedStorage()
         {
             var result = TryGetSystemDrive();
 
@@ -184,17 +187,17 @@ namespace ScreenR.Shared.Helpers
             return Math.Round((double)((result.Value.TotalSize - result.Value.TotalFreeSpace) / 1024 / 1024 / 1024), 2);
         }
 
-        private static Result<DriveInfo> TryGetSystemDrive()
+        private Result<DriveInfo> TryGetSystemDrive()
         {
             if (_systemDrive is null)
             {
                 _systemDrive = EnvironmentHelper.Platform switch
                 {
-                    Platform.Windows => DriveInfo.GetDrives().FirstOrDefault(x => 
-                        x.IsReady && 
+                    Platform.Windows => DriveInfo.GetDrives().FirstOrDefault(x =>
+                        x.IsReady &&
                         x.RootDirectory.FullName.Contains(Path.GetPathRoot(Environment.SystemDirectory) ?? "C:\\")),
-                    Platform.Linux => DriveInfo.GetDrives().FirstOrDefault(x => 
-                        x.IsReady && 
+                    Platform.Linux => DriveInfo.GetDrives().FirstOrDefault(x =>
+                        x.IsReady &&
                         x.RootDirectory.FullName == (Path.GetPathRoot(Environment.CurrentDirectory) ?? "/")),
                     _ => null
                 };

@@ -64,9 +64,9 @@
                     <td>@(device.ComputerName)</td>
                     <td>@(device.Alias)</td>
                     <td>@(device.LastOnline)</td>
-                    <td>@(DeviceHelper.GetFormattedMemoryPercent(device))</td>
+                    <td>@(GetFormattedPercent(device.UsedMemory, device.TotalMemory))</td>
                     <td>@(device.TotalMemory)GB</td>
-                    <td>@(DeviceHelper.GetFormattedStoragePercent(device))</td>
+                    <td>@(GetFormattedPercent(device.UsedStorage, device.TotalStorage))</td>
                     <td>@(device.TotalStorage)GB</td>
                     <td>@(device.OperatingSystem)</td>
                     <td>@(device.Architecture)</td>
@@ -132,9 +132,9 @@
                     <td>@(device.ComputerName)</td>
                     <td>@(device.Alias)</td>
                     <td>@(device.LastOnline)</td>
-                    <td>@(DeviceHelper.GetFormattedMemoryPercent(device))</td>
+                    <td>@(GetFormattedPercent(device.UsedMemory, device.TotalMemory))</td>
                     <td>@(device.TotalMemory)GB</td>
-                    <td>@(DeviceHelper.GetFormattedStoragePercent(device))</td>
+                    <td>@(GetFormattedPercent(device.UsedStorage, device.TotalStorage))</td>
                     <td>@(device.TotalStorage)GB</td>
                     <td>@(device.OperatingSystem)</td>
                     <td>@(device.Architecture)</td>
@@ -184,6 +184,12 @@
         }
     }
 
+    
+    private string GetFormattedPercent(double used, double total)
+    {
+          return $"{Math.Round(used / total * 100)}%";
+    }
+
     private async void OnDesktopDeviceUpdated(object? sender, DesktopDevice device)
     {
         if (_desktopDevices.TryFindIndex(x => x.SessionId == device.SessionId, out var index))
@@ -216,9 +222,10 @@
         await Task.Delay(3000);
     }
 
-      private async Task StartRemoteControl(DesktopDevice device)
+    private async Task StartRemoteControl(DesktopDevice device)
     {
         using var _ = Loader.Show("Sending request");
         await Task.Delay(3000);
     }
+
 }

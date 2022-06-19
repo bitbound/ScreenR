@@ -85,6 +85,8 @@ IHost BuildHost<TStartupAction>(AppState? appState = null)
         .ConfigureServices(services =>
         {
             services.AddHostedService<TStartupAction>();
+            services.AddSingleton<IDeviceCreator, DeviceCreator>();
+            services.AddSingleton<IProcessLauncher, ProcessLauncher>();
             services.AddSingleton<IServiceHubConnection, ServiceHubConnection>();
             services.AddSingleton<IHubConnectionBuilderFactory, HubConnectionBuilderFactory>();
 

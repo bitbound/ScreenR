@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using ScreenR.Service.Interfaces;
 using ScreenR.Shared.Helpers;
+using ScreenR.Shared.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,12 +20,18 @@ namespace ScreenR.Service.Services
         private readonly string _installDir = Path.Combine(Path.GetPathRoot(Environment.SystemDirectory) ?? "C:\\", "Program Files", "ScreenR");
         private readonly IAppState _appState;
         private readonly IHostApplicationLifetime _lifetime;
+        private readonly IProcessLauncher _processLauncher;
         private readonly ILogger<InstallerServiceWindows> _logger;
 
-        public InstallerServiceWindows(IAppState appState, IHostApplicationLifetime lifetime, ILogger<InstallerServiceWindows> logger)
+        public InstallerServiceWindows(
+            IAppState appState,
+            IHostApplicationLifetime lifetime,
+            IProcessLauncher processLauncher,
+            ILogger<InstallerServiceWindows> logger)
         {
             _appState = appState;
             _lifetime = lifetime;
+            _processLauncher = processLauncher;
             _logger = logger;
         }
 
@@ -39,7 +46,7 @@ namespace ScreenR.Service.Services
                     _logger.LogError("Install command must be run as administrator.");
                 }
 
-                var result = await ProcessHelper.GetProcessOutput("cmd.exe", "/c sc.exe stop ScreenR_Service");
+                var result = await _processLauncher.GetProcessOutput("cmd.exe", "/c sc.exe stop ScreenR_Service");
 
                 if (!result.IsSuccess)
                 {
@@ -62,7 +69,7 @@ namespace ScreenR.Service.Services
                 Directory.CreateDirectory(_installDir);
                 File.Copy(exePath, targetPath, true);
 
-                result = await ProcessHelper.GetProcessOutput("cmd.exe", $"/c sc.exe create ScreenR_Service " +
+                result = await _processLauncher.GetProcessOutput("cmd.exe", $"/c sc.exe create ScreenR_Service " +
                     $"binPath= \"\\\"{targetPath}\\\" run -s {_appState.ServerUrl} -d {_appState.DeviceId}\" start= auto");
 
                 if (!result.IsSuccess)
@@ -71,9 +78,9 @@ namespace ScreenR.Service.Services
                     return;
                 }
 
-                result = await ProcessHelper.GetProcessOutput("cmd.exe", "/c sc.exe failure \"ScreenR_Service\" reset= 5 actions= restart/5000");
+                result = await _processLauncher.GetProcessOutput("cmd.exe", "/c sc.exe failure \"ScreenR_Service\" reset= 5 actions= restart/5000");
 
-                await ProcessHelper.GetProcessOutput("sc", "start ScreenR_Service");
+                await _processLauncher.GetProcessOutput("sc", "start ScreenR_Service");
 
                 _logger.LogInformation("Install completed.");
             }
@@ -93,14 +100,14 @@ namespace ScreenR.Service.Services
             {
                 _logger.LogInformation("Uninstall started.");
 
-                var result = await ProcessHelper.GetProcessOutput("cmd.exe", "/c sc.exe stop ScreenR_Service");
+                var result = await _processLauncher.GetProcessOutput("cmd.exe", "/c sc.exe stop ScreenR_Service");
                 if (!result.IsSuccess)
                 {
                     _logger.LogError("{msg}", result.Error);
                     return;
                 }
 
-                result = await ProcessHelper.GetProcessOutput("cmd.exe", "/c sc.exe delete ScreenR_Service");
+                result = await _processLauncher.GetProcessOutput("cmd.exe", "/c sc.exe delete ScreenR_Service");
                 if (!result.IsSuccess)
                 {
                     _logger.LogError("{msg}", result.Error);

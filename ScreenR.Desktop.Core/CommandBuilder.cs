@@ -61,6 +61,8 @@ namespace ScreenR.Desktop.Core
                         var appState = new AppState(serverUrl, sessionId, passphrase, timeout);
                         services.AddSingleton<IDesktopHubConnection, DesktopHubConnection>();
                         services.AddSingleton<IAppState>(appState);
+                        services.AddSingleton<IDeviceCreator, DeviceCreator>();
+                        services.AddSingleton<IProcessLauncher, ProcessLauncher>();
                         services.AddSingleton<IBitmapUtility, BitmapUtility>();
                         services.AddSingleton<IHubConnectionBuilderFactory, HubConnectionBuilderFactory>();
                         services.AddHostedService<StartupAction>();
