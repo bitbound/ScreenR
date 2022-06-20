@@ -1,9 +1,11 @@
-﻿<div class="text-center mt-5" style="margin-bottom:150px">
+﻿@inject IAnonymousApiClient ApiClient
+
+<div class="text-center mt-5" style="margin-bottom:150px">
     <h1>
         ScreenR
     </h1>
     <div class="lead">
-        Desktop streaming through SignalR
+        Remote control through SignalR
     </div>
     <div class="mt-5">
         <div>
@@ -12,14 +14,27 @@
             </a>
         </div>
         
-        <div class="mt-3">
-            <a href="/Identity/Account/Register" class="btn btn-secondary btn-lg">
-                Register
-            </a>
-        </div>
+        @if (!_anyUsersInDb)
+        {
+            <div class="mt-3">
+                <a href="/Identity/Account/Register" class="btn btn-secondary btn-lg">
+                    Register
+                </a>
+            </div>
+        }
     </div>
 </div>
 
 @code {
+    private bool _anyUsersInDb = true;
 
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await ApiClient.CheckIfExistingUsers();
+        if (result.IsSuccess)
+        {
+            _anyUsersInDb = result.Value;
+        }
+        await base.OnInitializedAsync();
+    }
 }

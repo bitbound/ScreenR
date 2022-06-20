@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Desktop.Shared.Dtos
+namespace ScreenR.Shared.Dtos
 {
     [DataContract]
     public class DesktopFrameChunk : BaseDto

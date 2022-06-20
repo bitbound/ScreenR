@@ -1,7 +1,8 @@
-﻿using ScreenR.Desktop.Shared.Enums;
-using ScreenR.Desktop.Shared.Helpers;
-using ScreenR.Desktop.Shared.Models;
-using ScreenR.Desktop.Shared.Native.Windows;
+﻿using ScreenR.Desktop.Shared.Native.Windows;
+using ScreenR.Shared;
+using ScreenR.Shared.Enums;
+using ScreenR.Shared.Helpers;
+using ScreenR.Shared.Models;
 using System.Runtime.InteropServices;
 
 namespace ScreenR.Desktop.Shared.Services

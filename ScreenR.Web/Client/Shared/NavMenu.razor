@@ -1,7 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @inject NavigationManager Navigation
 @inject SignOutSessionStateManager SignOutManager
-
+@inject IAnonymousApiClient ApiClient
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid flex-nowrap">
@@ -40,9 +40,12 @@
                 <div class="px-3 mt-5">
                     <a class="btn btn-link text-light" href="authentication/login">Log In</a>
                 </div>
-                 <div class="px-3 mt-2">
-                    <a class="btn btn-link text-light" href="authentication/register">Register</a>
-                </div>
+                @if (!_anyUsersInDb)
+                {
+                    <div class="px-3 mt-2">
+                        <a class="btn btn-link text-light" href="authentication/register">Register</a>
+                    </div>
+                }
             </NotAuthorized>
         </AuthorizeView>
     </nav>
@@ -50,8 +53,17 @@
 
 @code {
     private bool collapseNavMenu = true;
+    private bool _anyUsersInDb = true;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        var result = await ApiClient.CheckIfExistingUsers();
+        _anyUsersInDb = result.IsSuccess && result.Value;
+    }
 
     private async Task BeginSignOut(MouseEventArgs args)
     {

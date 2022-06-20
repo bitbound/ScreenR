@@ -1,5 +1,5 @@
-﻿using ScreenR.Desktop.Shared.Dtos;
-using ScreenR.Desktop.Shared.Models;
+﻿using ScreenR.Shared.Dtos;
+using ScreenR.Shared.Models;
 
 namespace ScreenR.Web.Server.Models
 {

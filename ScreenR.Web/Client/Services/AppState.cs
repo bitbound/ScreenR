@@ -1,4 +1,4 @@
-﻿using ScreenR.Desktop.Shared.Reactive;
+﻿using ScreenR.Shared.Reactive;
 using ScreenR.Web.Client.Models;
 using System.Collections.ObjectModel;
 using System.ComponentModel;

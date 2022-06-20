@@ -1,6 +1,7 @@
-﻿using ScreenR.Desktop.Core;
-using ScreenR.Desktop.Core.Interfaces;
-using ScreenR.Desktop.Shared.Models;
+﻿using ScreenR.Desktop.Control;
+using ScreenR.Desktop.Control.Interfaces;
+using ScreenR.Shared;
+using ScreenR.Shared.Models;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;

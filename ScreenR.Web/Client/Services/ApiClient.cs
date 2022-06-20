@@ -1,4 +1,5 @@
-﻿using ScreenR.Desktop.Shared.Models;
+﻿using ScreenR.Shared;
+using ScreenR.Shared.Models;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 
@@ -6,8 +7,8 @@ namespace ScreenR.Web.Client.Services
 {
     public interface IApiClient
     {
-        ValueTask<DesktopDevice[]> GetDesktopDevices();
-        ValueTask<ServiceDevice[]> GetServiceDevices();
+        Task<Result<DesktopDevice[]>> GetDesktopDevices();
+        Task<Result<ServiceDevice[]>> GetServiceDevices();
     }
 
     public class ApiClient : IApiClient
@@ -21,35 +22,38 @@ namespace ScreenR.Web.Client.Services
             _logger = logger;
         }
 
-        public async ValueTask<DesktopDevice[]> GetDesktopDevices()
+        public async Task<Result<DesktopDevice[]>> GetDesktopDevices()
+        {
+            return await TryAndLog(async () =>
+                await _client.GetFromJsonAsync<DesktopDevice[]>("api/devices/desktop") ?? Array.Empty<DesktopDevice>());
+        }
+
+        public async Task<Result<bool>> CheckIfExistingUsers()
+        {
+            return await TryAndLog(async () =>
+                await _client.GetFromJsonAsync<bool>("api/users/any"));
+        }
+
+
+        public async Task<Result<ServiceDevice[]>> GetServiceDevices()
+        {
+            return await TryAndLog(async () =>
+                await _client.GetFromJsonAsync<ServiceDevice[]>("api/devices/service") ?? Array.Empty<ServiceDevice>());
+        }
+
+
+        private async Task<Result<T>> TryAndLog<T>(Func<Task<T>> invokeAction, [CallerMemberName] string methodName = "")
         {
             try
             {
-                return await _client.GetFromJsonAsync<DesktopDevice[]>("api/devices/desktop") ?? Array.Empty<DesktopDevice>();
+                var results = await invokeAction();
+                return Result.Ok(results);
             }
             catch (Exception ex)
             {
-                LogError(ex);
-                throw;
+                _logger.LogError(ex, "Error while calling {method}.", methodName);
+                return Result.Fail<T>(ex);
             }
-        }
-
-        public async ValueTask<ServiceDevice[]> GetServiceDevices()
-        {
-            try
-            {
-                return await _client.GetFromJsonAsync<ServiceDevice[]>("api/devices/service") ?? Array.Empty<ServiceDevice>();
-            }
-            catch (Exception ex)
-            {
-                LogError(ex);
-                throw;
-            }
-        }
-
-        private void LogError(Exception ex, [CallerMemberName] string methodName = "")
-        {
-            _logger.LogError(ex, "Error while calling {method}.", methodName);
         }
     }
 }

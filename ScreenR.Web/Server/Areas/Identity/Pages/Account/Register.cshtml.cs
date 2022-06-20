@@ -17,7 +17,9 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using ScreenR.Web.Server.Data;
 using ScreenR.Web.Server.Models;
 
 namespace ScreenR.Web.Server.Areas.Identity.Pages.Account
@@ -25,6 +27,7 @@ namespace ScreenR.Web.Server.Areas.Identity.Pages.Account
     public class RegisterModel : PageModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly AppDb _appDb;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUserStore<ApplicationUser> _userStore;
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
@@ -32,12 +35,14 @@ namespace ScreenR.Web.Server.Areas.Identity.Pages.Account
         private readonly IEmailSender _emailSender;
 
         public RegisterModel(
+            AppDb appDb,
             UserManager<ApplicationUser> userManager,
             IUserStore<ApplicationUser> userStore,
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
             IEmailSender emailSender)
         {
+            _appDb = appDb;
             _userManager = userManager;
             _userStore = userStore;
             _emailStore = GetEmailStore();
@@ -101,14 +106,24 @@ namespace ScreenR.Web.Server.Areas.Identity.Pages.Account
         }
 
 
-        public async Task OnGetAsync(string returnUrl = null)
+        public async Task<IActionResult> OnGetAsync(string returnUrl = null)
         {
+            if (await _appDb.Users.AnyAsync())
+            {
+                return Redirect("/");
+            }
+
             ReturnUrl = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            return Page();
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
+            if (await _appDb.Users.AnyAsync())
+            {
+                return Redirect("/");
+            }
             returnUrl ??= Url.Content("~/");
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)

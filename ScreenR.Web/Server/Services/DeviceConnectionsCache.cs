@@ -1,4 +1,4 @@
-﻿using ScreenR.Desktop.Shared.Models;
+﻿using ScreenR.Shared.Models;
 using System.Collections.Concurrent;
 
 namespace ScreenR.Web.Server.Services

@@ -1,7 +1,4 @@
 ﻿@implements IDisposable
-@using ScreenR.Desktop.Shared.Dtos
-@using ScreenR.Desktop.Shared.Helpers
-@using ScreenR.Desktop.Shared.Models
 @inject IUserHubConnection UserHub
 @inject IJsInterop JsInterop
 @inject IApiClient ApiClient
@@ -175,11 +172,17 @@
 
         try
         {
-            var serviceDevices = await ApiClient.GetServiceDevices();
-            _serviceDevices.AddRange(serviceDevices);
+            var serviceResult = await ApiClient.GetServiceDevices();
+            if (serviceResult.IsSuccess && serviceResult.Value is not null)
+            {
+                _serviceDevices.AddRange(serviceResult.Value);
+            }
 
-            var desktopDevices = await ApiClient.GetDesktopDevices();
-            _desktopDevices.AddRange(desktopDevices);
+            var desktopResult = await ApiClient.GetDesktopDevices();
+            if (desktopResult.IsSuccess && desktopResult.Value is not null)
+            {
+                _desktopDevices.AddRange(desktopResult.Value);
+            }
         }
         catch(Exception ex)
         {

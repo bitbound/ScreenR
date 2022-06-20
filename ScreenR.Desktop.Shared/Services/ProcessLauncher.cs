@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using PInvoke;
 using ScreenR.Desktop.Shared.Native.Windows;
+using ScreenR.Shared;
+using ScreenR.Shared.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,7 +17,7 @@ namespace ScreenR.Desktop.Shared.Services
     public interface IProcessLauncher
     {
         Task<Result<string>> GetProcessOutput(string command, string arguments = "", int msTimeout = 10000);
-        Task<Result> LaunchDesktopStreamer(Guid requestId, string requesterConnectionId);
+        Task<Result> LaunchDesktopStreamer(string serverUrl, Guid requestId, string requesterConnectionId);
     }
 
     internal class ProcessLauncher : IProcessLauncher
@@ -60,10 +62,25 @@ namespace ScreenR.Desktop.Shared.Services
             }
         }
 
-        public async Task<Result> LaunchDesktopStreamer(Guid requestId, string requesterConnectionId)
+        public async Task<Result> LaunchDesktopStreamer(string serverUrl, Guid requestId, string requesterConnectionId)
         {
             try
             {
+                switch (EnvironmentHelper.Platform)
+                {
+                    case ScreenR.Shared.Enums.Platform.Unknown:
+                    case ScreenR.Shared.Enums.Platform.MacOS:
+                    case ScreenR.Shared.Enums.Platform.MacCatalyst:
+                    case ScreenR.Shared.Enums.Platform.Browser:
+                    default:
+                        break;
+                    case ScreenR.Shared.Enums.Platform.Windows:
+                        await LaunchDesktopStreamerWindows(serverUrl, requestId, requesterConnectionId);
+                        break;
+                    case ScreenR.Shared.Enums.Platform.Linux:
+                        await LaunchDesktopStreamerLinux(serverUrl, requestId, requesterConnectionId);
+                        break;
+                }
                 return Result.Ok();
             }
             catch (Exception ex)
@@ -73,5 +90,30 @@ namespace ScreenR.Desktop.Shared.Services
             }
         }
 
+        private Task LaunchDesktopStreamerLinux(string serverUrl, Guid requestId, string requesterConnectionId)
+        {
+            throw new NotImplementedException();
+        }
+
+        private async Task LaunchDesktopStreamerWindows(string serverUrl, Guid requestId, string requesterConnectionId)
+        {
+            var filename = "ScreenR.exe";
+            var arguments = $"start -s {serverUrl} -i {requestId}";
+            
+            if (Process.GetCurrentProcess().SessionId == 0)
+            {
+                var result = Win32Interop.LaunchProcessInSession(
+                    $"{filename} {arguments}",
+                    -1,
+                    false,
+                    "Default",
+                    true,
+                    out var procInfo);
+            }
+            else
+            {
+                Process.Start(filename, arguments);
+            }
+        }
     }
 }

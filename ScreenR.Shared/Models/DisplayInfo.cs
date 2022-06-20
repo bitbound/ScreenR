@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using System.Numerics;
 
-namespace ScreenR.Desktop.Shared.Models
+namespace ScreenR.Shared.Models
 {
     public class DisplayInfo
     {

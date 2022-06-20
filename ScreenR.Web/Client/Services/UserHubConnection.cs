@@ -1,12 +1,15 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.SignalR.Protocol;
-using ScreenR.Desktop.Shared.Dtos;
-using ScreenR.Desktop.Shared.Interfaces;
-using ScreenR.Desktop.Shared.Models;
-using ScreenR.Desktop.Shared.Services;
+using Microsoft.DotNet.Scaffolding.Shared.Messaging;
+using ScreenR.Shared.Dtos;
+using ScreenR.Shared.Enums;
+using ScreenR.Shared.Interfaces;
+using ScreenR.Shared.Models;
+using ScreenR.Shared.Services;
 using System.Net;
 
 namespace ScreenR.Web.Client.Services
@@ -15,6 +18,7 @@ namespace ScreenR.Web.Client.Services
     {
         event EventHandler<DesktopDevice>? DesktopDeviceUpdated;
         event EventHandler<ServiceDevice>? ServiceDeviceUpdated;
+
         Task Connect();
         IAsyncEnumerable<DesktopFrameChunk> GetDesktopStream(Guid sessionId, Guid requestId, string passphrase = "");
         Task RequestDesktopStream(Guid deviceId, Guid requestId);
@@ -24,6 +28,7 @@ namespace ScreenR.Web.Client.Services
     {
         private readonly HubConnection _connection;
         private readonly IHttpMessageHandlerFactory _handlerFactory;
+        private readonly IToastService _toastService;
         private readonly ILogger<UserHubConnection> _logger;
         private readonly IServiceScopeFactory _scopeFactory;
         public UserHubConnection(
@@ -31,19 +36,30 @@ namespace ScreenR.Web.Client.Services
             IWebAssemblyHostEnvironment hostEnv,
             IHttpMessageHandlerFactory handlerFactory,
             IHubConnectionBuilderFactory builderFactory,
+            IToastService toastService,
             ILogger<UserHubConnection> logger)
         {
             _scopeFactory = scopeFactory;
             _handlerFactory = handlerFactory;
+            _toastService = toastService;
             _logger = logger;
 
             _connection = builderFactory.CreateBuilder()
                .WithUrl($"{hostEnv.BaseAddress.TrimEnd('/')}/user-hub", options =>
                {
-                   //options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
-                   options.HttpMessageHandlerFactory = (x) =>
-                   {
-                       return _handlerFactory.CreateHandler("ScreenR.Web.ServerAPI");
+                   //options.HttpMessageHandlerFactory = (x) =>
+                   //{
+                   //    return _handlerFactory.CreateHandler("ScreenR.Web.ServerAPI");
+                   //};
+                   options.AccessTokenProvider = async () => {
+                       using var scope = _scopeFactory.CreateScope();
+                       var tokenProvider = scope.ServiceProvider.GetRequiredService<IAccessTokenProvider>();
+                       var result = await tokenProvider.RequestAccessToken();
+                       if (result.TryGetToken(out var token))
+                       {
+                           return token.Value;
+                       }
+                       return string.Empty;
                    };
                })
                .ConfigureLogging(x =>
@@ -73,6 +89,7 @@ namespace ScreenR.Web.Client.Services
 
             _connection.On<DesktopDevice>(nameof(NotifyDesktopDeviceUpdated), NotifyDesktopDeviceUpdated);
             _connection.On<ServiceDevice>(nameof(NotifyServiceDeviceUpdated), NotifyServiceDeviceUpdated);
+            _connection.On<string, MessageLevel>(nameof(ShowToast), ShowToast);
 
             while (true)
             {
@@ -120,6 +137,12 @@ namespace ScreenR.Web.Client.Services
         public async Task RequestDesktopStream(Guid deviceId, Guid requestId)
         {
             await _connection.InvokeAsync(nameof(RequestDesktopStream), deviceId, requestId);
+        }
+
+        public Task ShowToast(string message, MessageLevel messageLevel)
+        {
+            _toastService.ShowToast(message, messageLevel);
+            return Task.CompletedTask;
         }
 
         private Task HubConnection_Reconnected(string? arg)

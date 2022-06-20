@@ -2,11 +2,12 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ScreenR.Desktop.Shared.Enums;
-using ScreenR.Desktop.Shared.Extensions;
-using ScreenR.Desktop.Shared.Interfaces;
-using ScreenR.Desktop.Shared.Models;
+using ScreenR.Desktop.Shared;
 using ScreenR.Desktop.Shared.Services;
+using ScreenR.Shared.Enums;
+using ScreenR.Shared.Extensions;
+using ScreenR.Shared.Interfaces;
+using ScreenR.Shared.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,6 +58,7 @@ namespace ScreenR.Desktop.Service.Services
 
             Connection.Reconnecting += HubConnection_Reconnecting; ;
             Connection.Reconnected += HubConnection_Reconnected;
+            Connection.On<Guid, string>("RequestDesktopStream", OnRequestDesktopStream);
 
             while (!_appLifetime.ApplicationStopping.IsCancellationRequested)
             {
@@ -82,6 +84,33 @@ namespace ScreenR.Desktop.Service.Services
             }
         }
 
+        private async Task OnRequestDesktopStream(Guid requestId, string requesterConnectionId)
+        {
+            try
+            {
+                if (!File.Exists(FileNames.RemoteControl))
+                {
+                    using var client = new HttpClient();
+                    using var stream = await client.GetStreamAsync($"{_appState.ServerUrl}/Downloads/{FileNames.RemoteControl}");
+                    if (stream is null)
+                    {
+                        _logger.LogError("Stream is null while downloading remote control.");
+                        await Connection.InvokeAsync("SendToast", "Failed to download remote control app.", MessageLevel.Error, requesterConnectionId);
+                        return;
+                    }
+                    using var fs = new FileStream(FileNames.RemoteControl, FileMode.Create);
+                    await stream.CopyToAsync(fs);
+                }
+
+                await Connection.InvokeAsync("SendToast", "Remote control starting", MessageLevel.Success, requesterConnectionId);
+                await _processLauncher.LaunchDesktopStreamer(_appState.ServerUrl.ToString(), requestId, requesterConnectionId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while requesting desktop stream.");
+            }
+        }
+
         private async Task HubConnection_Reconnected(string? arg)
         {
             var deviceInfo = _deviceCreator.CreateService(_appState.DeviceId, true);
@@ -97,7 +126,7 @@ namespace ScreenR.Desktop.Service.Services
 
         public async Task RequestDesktopStream(Guid requestId, string requesterConnectionId)
         {
-            await _processLauncher.LaunchDesktopStreamer(requestId, requesterConnectionId);
+            await _processLauncher.LaunchDesktopStreamer(_appState.ServerUrl.ToString(), requestId, requesterConnectionId);
         }
 
         private class RetryPolicy : IRetryPolicy

@@ -6,6 +6,7 @@ using ScreenR.Desktop.Service.Interfaces;
 using ScreenR.Desktop.Service.Services;
 using ScreenR.Desktop.Service.Services.StartupActions;
 using ScreenR.Desktop.Shared.Services;
+using ScreenR.Shared.Services;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;

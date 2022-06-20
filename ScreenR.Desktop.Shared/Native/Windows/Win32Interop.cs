@@ -12,8 +12,42 @@ namespace ScreenR.Desktop.Shared.Native.Windows
     public static class Win32Interop
     {
 
-        private static bool LaunchProcessInSession(
-            string applicationName,
+        private static User32.SafeDesktopHandle? _lastInputDesktop;
+
+        public static bool TryGetCurrentDesktop(out string desktopName)
+        {
+            using var safeHandle = GetInputDesktop();
+            var desktopPtr = safeHandle.DangerousGetHandle();
+            var pvInfoPtr = Marshal.AllocHGlobal(256);
+            var lenPtr = Marshal.AllocHGlobal(256);
+
+            try
+            {
+
+                if (!User32.GetUserObjectInformation(desktopPtr, User32.ObjectInformationType.UOI_NAME, pvInfoPtr, 256, lenPtr))
+                {
+                    desktopName = string.Empty;
+                    return false;
+
+                }
+
+                desktopName = Marshal.PtrToStringAuto(pvInfoPtr) ?? string.Empty;
+                return true;
+            }
+            finally
+            {
+                User32.CloseDesktop(desktopPtr);
+                Marshal.FreeHGlobal(pvInfoPtr);
+                Marshal.FreeHGlobal(lenPtr);
+            }
+        }
+        public static User32.SafeDesktopHandle GetInputDesktop()
+        {
+            return User32.OpenInputDesktop(User32.DesktopCreationFlags.None, true, Kernel32.ACCESS_MASK.GenericRight.GENERIC_ALL);
+        }
+
+        public static bool LaunchProcessInSession(
+            string commandLine,
             int targetSessionId,
             bool forceConsoleSession,
             string desktopName,
@@ -110,7 +144,7 @@ namespace ScreenR.Desktop.Shared.Native.Windows
                 bool result = Kernel32.CreateProcessAsUser(
                     duplicatedToken.DangerousGetHandle(),
                     null,
-                    applicationName,
+                    commandLine,
                     saPtr,
                     saPtr,
                     false,
@@ -133,7 +167,30 @@ namespace ScreenR.Desktop.Shared.Native.Windows
 
         }
 
-        private static List<WindowsSession> GetActiveSessions()
+        public static bool SwitchToInputDesktop()
+        {
+            try
+            {
+                _lastInputDesktop?.Dispose();
+
+                var inputDesktop = User32.OpenInputDesktop(0, true, Kernel32.ACCESS_MASK.GenericRight.GENERIC_ALL);
+
+                if (inputDesktop.IsInvalid)
+                {
+                    return false;
+                }
+
+                var result = User32.SetThreadDesktop(inputDesktop) && User32.SwitchDesktop(inputDesktop);
+                _lastInputDesktop = inputDesktop;
+                return result;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static List<WindowsSession> GetActiveSessions()
         {
             unsafe
             {
@@ -175,7 +232,7 @@ namespace ScreenR.Desktop.Shared.Native.Windows
                 return sessions;
             }
         }
-        private static string GetUsernameFromSessionId(uint sessionId)
+        public static string GetUsernameFromSessionId(uint sessionId)
         {
             var username = string.Empty;
             
@@ -186,30 +243,6 @@ namespace ScreenR.Desktop.Shared.Native.Windows
             }
 
             return username ?? string.Empty;
-        }
-
-        private static User32.SafeDesktopHandle? _lastInputDesktop;
-        public static bool SwitchToInputDesktop()
-        {
-            try
-            {
-                _lastInputDesktop?.Dispose();
-
-                var inputDesktop = User32.OpenInputDesktop(0, true, Kernel32.ACCESS_MASK.GenericRight.GENERIC_ALL);
-
-                if (inputDesktop.IsInvalid)
-                {
-                    return false;
-                }
-
-                var result = User32.SetThreadDesktop(inputDesktop) && User32.SwitchDesktop(inputDesktop);
-                _lastInputDesktop = inputDesktop;
-                return result;
-            }
-            catch
-            {
-                return false;
-            }
         }
     }
 }

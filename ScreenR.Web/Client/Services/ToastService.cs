@@ -1,4 +1,5 @@
-﻿using ScreenR.Web.Client.Models;
+﻿using ScreenR.Shared.Enums;
+using ScreenR.Web.Client.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Timers;
@@ -12,7 +13,7 @@ namespace ScreenR.Web.Client.Services
 
         event EventHandler OnToastsChanged;
 
-        void ShowToast(string message, int expirationMillisecond = 3000, string? classString = null, string? styleOverrides = null);
+        void ShowToast(string message, MessageLevel messageLevel = MessageLevel.Information, int expirationMillisecond = 3000, string? styleOverrides = null);
     }
 
     public class ToastService : IToastService
@@ -21,14 +22,17 @@ namespace ScreenR.Web.Client.Services
         public ConcurrentList<Toast> Toasts { get; } = new();
 
         public void ShowToast(string message,
+            MessageLevel messageLevel = MessageLevel.Information,
             int expirationMillisecond = 3000,
-            string? classString = null,
             string? styleOverrides = null)
         {
-
-            if (string.IsNullOrWhiteSpace(classString))
+            var classString = messageLevel switch
             {
-                classString = "bg-success text-white";
+                MessageLevel.Information => "bg-info",
+                MessageLevel.Warning => "bg-warning",
+                MessageLevel.Error => "bg-error",
+                MessageLevel.Success => "bg-success",
+                _ => "bg-info"
             };
 
             var toastModel = new Toast(Guid.NewGuid().ToString(),

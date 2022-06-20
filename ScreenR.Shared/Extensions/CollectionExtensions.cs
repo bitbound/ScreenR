@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Desktop.Shared.Extensions
+namespace ScreenR.Shared.Extensions
 {
     public static class CollectionExtensions
     {

@@ -1,11 +1,11 @@
-﻿using ScreenR.Desktop.Shared.Enums;
+﻿using ScreenR.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Desktop.Shared.Helpers
+namespace ScreenR.Shared.Helpers
 {
     public static class EnvironmentHelper
     {

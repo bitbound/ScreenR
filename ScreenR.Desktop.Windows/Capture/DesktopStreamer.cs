@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.IO;
-using ScreenR.Desktop.Core.Interfaces;
-using ScreenR.Desktop.Core.Services;
-using ScreenR.Desktop.Shared.Dtos;
-using ScreenR.Desktop.Shared.Models;
+using ScreenR.Desktop.Control.Interfaces;
+using ScreenR.Desktop.Control.Services;
+using ScreenR.Shared.Dtos;
+using ScreenR.Shared.Models;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;

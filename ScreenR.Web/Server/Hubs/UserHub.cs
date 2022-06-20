@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using ScreenR.Desktop.Shared.Dtos;
-using ScreenR.Desktop.Shared.Interfaces;
-using ScreenR.Desktop.Shared.Models;
+using Microsoft.EntityFrameworkCore;
+using ScreenR.Shared.Dtos;
+using ScreenR.Shared.Interfaces;
+using ScreenR.Shared.Models;
+using ScreenR.Web.Server.Data;
 
 namespace ScreenR.Web.Server.Hubs
 {
-    //[Authorize]
+    [Authorize]
     public class UserHub : Hub<IUserHubClient>
     {
         private readonly IHubContext<DesktopHub, IDesktopHubClient> _desktopHubContext;

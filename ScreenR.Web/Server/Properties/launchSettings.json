@@ -19,6 +19,7 @@
     "ScreenR.Web.Server (WASM Debug)": {
       "commandName": "Project",
       "launchBrowser": true,
+      "launchUrl": "https://localhost:7118",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Desktop.Shared.Enums
+namespace ScreenR.Shared.Enums
 {
     public enum Platform
     {

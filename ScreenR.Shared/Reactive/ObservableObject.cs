@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Desktop.Shared.Reactive
+namespace ScreenR.Shared.Reactive
 {
     public class ObservableObject : INotifyPropertyChanged
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Desktop.Shared.Models
+namespace ScreenR.Shared.Models
 {
     public struct StreamToken : IEquatable<StreamToken>
     {
@@ -21,14 +21,14 @@ namespace ScreenR.Desktop.Shared.Models
 
         public bool Equals(StreamToken other)
         {
-            return 
-                SessionId == other.SessionId && 
+            return
+                SessionId == other.SessionId &&
                 RequestId == other.RequestId;
         }
 
         public override bool Equals(object? obj)
         {
-            return  obj is StreamToken other && Equals(other);
+            return obj is StreamToken other && Equals(other);
         }
 
         public override int GetHashCode()

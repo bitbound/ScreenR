@@ -3,7 +3,7 @@ using Duende.IdentityServer.EntityFramework.Options;
 using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using ScreenR.Desktop.Shared.Models;
+using ScreenR.Shared.Models;
 using ScreenR.Web.Server.Models;
 
 namespace ScreenR.Web.Server.Data

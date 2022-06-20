@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Desktop.Shared.Models
+namespace ScreenR.Shared.Models
 {
     public class DesktopDevice : Device
     {

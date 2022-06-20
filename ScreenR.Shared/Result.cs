@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Desktop.Shared
+namespace ScreenR.Shared
 {
     public class Result
     {
@@ -68,7 +68,6 @@ namespace ScreenR.Desktop.Shared
             Value = value;
             Exception = exception;
         }
-
 
         public bool IsSuccess { get; init; }
 

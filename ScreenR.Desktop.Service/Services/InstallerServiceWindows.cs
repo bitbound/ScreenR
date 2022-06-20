@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ScreenR.Desktop.Service.Interfaces;
-using ScreenR.Desktop.Shared.Helpers;
 using ScreenR.Desktop.Shared.Services;
 using System;
 using System.Collections.Generic;

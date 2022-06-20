@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using ScreenR.Web.Server;
 using ScreenR.Web.Server.Data;
@@ -64,14 +66,24 @@ else
 app.UseHttpsRedirection();
 
 app.UseBlazorFrameworkFiles();
+
 app.UseStaticFiles();
+var downloadDir = Path.Combine(app.Environment.WebRootPath, "Downloads");
+Directory.CreateDirectory(downloadDir);
+app.UseStaticFiles(new StaticFileOptions()
+{
+    FileProvider = new PhysicalFileProvider(downloadDir),
+    ServeUnknownFileTypes = true,
+    RequestPath = new PathString("/Downloads"),
+    ContentTypeProvider = new FileExtensionContentTypeProvider(),
+    DefaultContentType = "application/octet-stream"
+});
 
 app.UseRouting();
 
 app.UseIdentityServer();
 app.UseAuthentication();
 app.UseAuthorization();
-
 
 app.MapRazorPages();
 app.MapControllers();

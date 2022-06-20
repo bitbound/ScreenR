@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using ScreenR.Desktop.Shared.Enums;
-using ScreenR.Desktop.Shared.Interfaces;
-using ScreenR.Desktop.Shared.Models;
+using ScreenR.Shared.Enums;
+using ScreenR.Shared.Interfaces;
+using ScreenR.Shared.Models;
 using ScreenR.Web.Server.Data;
 using ScreenR.Web.Server.Services;
 using System.Collections.Concurrent;
@@ -56,6 +56,11 @@ namespace ScreenR.Web.Server.Hubs
             }
 
             await base.OnDisconnectedAsync(exception);
+        }
+
+        public async Task SendToast(string message, MessageLevel messageLevel, string userConnectionId)
+        {
+            await _userHubContext.Clients.Client(userConnectionId).ShowToast(message, messageLevel);
         }
         public async Task SetDeviceInfo(ServiceDevice device)
         {

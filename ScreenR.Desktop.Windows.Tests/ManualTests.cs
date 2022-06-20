@@ -1,7 +1,6 @@
 #nullable disable
 using Microsoft.Extensions.Logging;
-using ScreenR.Desktop.Shared.Models;
-using ScreenR.Desktop.Core.Services;
+using ScreenR.Desktop.Control.Services;
 using ScreenR.Desktop.Windows.Capture;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
@@ -9,6 +8,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Reflection;
+using ScreenR.Shared.Models;
 
 namespace ScreenR.Desktop.Windows.Tests
 {

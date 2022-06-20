@@ -2,6 +2,18 @@
   "Version": 3,
   "ListAllProjects": false,
   "MultiProjectConfigurations": {
+    "Service/Server": {
+      "Projects": {
+        "ScreenR.Web.Server": {
+          "ProfileName": "ScreenR.Web.Server",
+          "StartProject": true
+        },
+        "ScreenR.Desktop.Service": {
+          "ProfileName": "ScreenR.Desktop.Service",
+          "StartProject": true
+        }
+      }
+    },
     "Service/Desktop/Server": {
       "Projects": {
         "ScreenR.Web.Server": {
@@ -22,7 +34,8 @@
       "Projects": {
         "ScreenR.Web.Server": {
           "ProfileName": "ScreenR.Web.Server (WASM Debug)",
-          "StartProject": true
+
+          "StartBrowserWithURL": "https://localhost:7118"
         },
         "ScreenR.Desktop.Service": {
           "ProfileName": "ScreenR.Desktop.Service",

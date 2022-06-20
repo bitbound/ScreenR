@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using ScreenR.Desktop.Core;
-using ScreenR.Desktop.Core.Interfaces;
-using ScreenR.Desktop.Core.Services;
+using ScreenR.Desktop.Control;
+using ScreenR.Desktop.Control.Interfaces;
+using ScreenR.Desktop.Control.Services;
 using ScreenR.Desktop.Windows.Capture;
 using System;
 using System.Collections.Generic;
