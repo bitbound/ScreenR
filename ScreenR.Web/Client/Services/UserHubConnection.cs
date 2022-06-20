@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.SignalR.Protocol;
-using ScreenR.Shared.Dtos;
-using ScreenR.Shared.Interfaces;
-using ScreenR.Shared.Models;
-using ScreenR.Shared.Services;
+using ScreenR.Desktop.Shared.Dtos;
+using ScreenR.Desktop.Shared.Interfaces;
+using ScreenR.Desktop.Shared.Models;
+using ScreenR.Desktop.Shared.Services;
 using System.Net;
 
 namespace ScreenR.Web.Client.Services

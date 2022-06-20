@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Shared.Dtos
+namespace ScreenR.Desktop.Shared.Dtos
 {
     [DataContract]
     public enum DtoType

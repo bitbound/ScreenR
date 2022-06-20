@@ -40,12 +40,9 @@
                 <div class="px-3 mt-5">
                     <a class="btn btn-link text-light" href="authentication/login">Log In</a>
                 </div>
-                @if (!_anyUsersInDb)
-                {
-                    <div class="px-3 mt-2">
-                        <a class="btn btn-link text-light" href="authentication/register">Register</a>
-                    </div>
-                }
+                 <div class="px-3 mt-2">
+                    <a class="btn btn-link text-light" href="authentication/register">Register</a>
+                </div>
             </NotAuthorized>
         </AuthorizeView>
     </nav>
@@ -53,7 +50,6 @@
 
 @code {
     private bool collapseNavMenu = true;
-    private bool _anyUsersInDb;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 

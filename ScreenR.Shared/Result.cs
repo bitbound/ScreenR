@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Shared
+namespace ScreenR.Desktop.Shared
 {
     public class Result
     {

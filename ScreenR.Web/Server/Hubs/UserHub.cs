@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using ScreenR.Shared.Dtos;
-using ScreenR.Shared.Interfaces;
-using ScreenR.Shared.Models;
+using ScreenR.Desktop.Shared.Dtos;
+using ScreenR.Desktop.Shared.Interfaces;
+using ScreenR.Desktop.Shared.Models;
 
 namespace ScreenR.Web.Server.Hubs
 {

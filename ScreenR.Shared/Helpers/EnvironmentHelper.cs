@@ -1,11 +1,11 @@
-﻿using ScreenR.Shared.Enums;
+﻿using ScreenR.Desktop.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Shared.Helpers
+namespace ScreenR.Desktop.Shared.Helpers
 {
     public static class EnvironmentHelper
     {
@@ -40,6 +40,10 @@ namespace ScreenR.Shared.Helpers
                 else if (OperatingSystem.IsMacCatalyst())
                 {
                     return Platform.MacOS;
+                }
+                else if (OperatingSystem.IsBrowser())
+                {
+                    return Platform.Browser;
                 }
                 else
                 {

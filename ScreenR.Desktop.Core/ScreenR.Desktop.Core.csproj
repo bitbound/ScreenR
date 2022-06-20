@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ScreenR.Shared\ScreenR.Shared.csproj" />
+    <ProjectReference Include="..\ScreenR.Desktop.Shared\ScreenR.Desktop.Shared.csproj" />
   </ItemGroup>
 
 </Project>

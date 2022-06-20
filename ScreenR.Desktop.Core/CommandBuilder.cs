@@ -4,7 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ScreenR.Desktop.Core.Interfaces;
 using ScreenR.Desktop.Core.Services;
-using ScreenR.Shared.Services;
+using ScreenR.Desktop.Shared.Services;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;

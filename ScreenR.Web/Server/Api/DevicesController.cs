@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ScreenR.Shared.Models;
+using ScreenR.Desktop.Shared.Models;
 using ScreenR.Web.Server.Data;
 using ScreenR.Web.Server.Services;
 

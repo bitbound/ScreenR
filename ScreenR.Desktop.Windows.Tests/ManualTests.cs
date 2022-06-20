@@ -1,6 +1,6 @@
 #nullable disable
 using Microsoft.Extensions.Logging;
-using ScreenR.Shared.Models;
+using ScreenR.Desktop.Shared.Models;
 using ScreenR.Desktop.Core.Services;
 using ScreenR.Desktop.Windows.Capture;
 using SkiaSharp;

@@ -8,8 +8,8 @@
           "ProfileName": "ScreenR.Web.Server",
           "StartProject": true
         },
-        "ScreenR.Service": {
-          "ProfileName": "ScreenR.Service",
+        "ScreenR.Desktop.Service": {
+          "ProfileName": "ScreenR.Desktop.Service",
           "StartProject": true
         },
         "ScreenR.Desktop.Windows": {
@@ -24,8 +24,8 @@
           "ProfileName": "ScreenR.Web.Server (WASM Debug)",
           "StartProject": true
         },
-        "ScreenR.Service": {
-          "ProfileName": "ScreenR.Service",
+        "ScreenR.Desktop.Service": {
+          "ProfileName": "ScreenR.Desktop.Service",
           "StartProject": true
         },
         "ScreenR.Desktop.Windows": {

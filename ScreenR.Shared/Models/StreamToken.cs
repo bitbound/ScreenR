@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Shared.Models
+namespace ScreenR.Desktop.Shared.Models
 {
     public struct StreamToken : IEquatable<StreamToken>
     {

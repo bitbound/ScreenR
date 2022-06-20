@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Shared.Interfaces
+namespace ScreenR.Desktop.Shared.Interfaces
 {
     public interface IServiceHubClient
     {

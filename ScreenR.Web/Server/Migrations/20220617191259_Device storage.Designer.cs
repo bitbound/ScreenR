@@ -292,7 +292,7 @@ namespace ScreenR.Web.Server.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("ScreenR.Shared.Models.ServiceDevice", b =>
+            modelBuilder.Entity("ScreenR.Desktop.Shared.Models.ServiceDevice", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()

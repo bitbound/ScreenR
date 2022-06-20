@@ -2,8 +2,8 @@
 using Microsoft.IO;
 using ScreenR.Desktop.Core.Interfaces;
 using ScreenR.Desktop.Core.Services;
-using ScreenR.Shared.Dtos;
-using ScreenR.Shared.Models;
+using ScreenR.Desktop.Shared.Dtos;
+using ScreenR.Desktop.Shared.Models;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;

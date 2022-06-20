@@ -13,9 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenR.Web.Server", "Scree
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenR.Web.Client", "ScreenR.Web\Client\ScreenR.Web.Client.csproj", "{F5C377DD-ADA4-4CEE-B70B-3A72CA23470D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenR.Service", "ScreenR.Service\ScreenR.Service.csproj", "{A650795E-A30A-428D-92A2-BC99EEC6AA81}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenR.Desktop.Service", "ScreenR.Desktop.Service\ScreenR.Desktop.Service.csproj", "{A650795E-A30A-428D-92A2-BC99EEC6AA81}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenR.Shared", "ScreenR.Shared\ScreenR.Shared.csproj", "{215202B9-CB0C-41B4-9FB8-2C4B305E2C5F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenR.Desktop.Shared", "ScreenR.Desktop.Shared\ScreenR.Desktop.Shared.csproj", "{215202B9-CB0C-41B4-9FB8-2C4B305E2C5F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D42912B6-84CA-4B96-9D3A-FA7E12266260}"
 	ProjectSection(SolutionItems) = preProject
@@ -23,6 +23,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitignore = .gitignore
 		ScreenR.sln.startup.json = ScreenR.sln.startup.json
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenR.Shared", "ScreenR.Shared\ScreenR.Shared.csproj", "{F323A115-C723-4515-9C1D-35A0E676CD7F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -58,6 +60,10 @@ Global
 		{215202B9-CB0C-41B4-9FB8-2C4B305E2C5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{215202B9-CB0C-41B4-9FB8-2C4B305E2C5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{215202B9-CB0C-41B4-9FB8-2C4B305E2C5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F323A115-C723-4515-9C1D-35A0E676CD7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F323A115-C723-4515-9C1D-35A0E676CD7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F323A115-C723-4515-9C1D-35A0E676CD7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F323A115-C723-4515-9C1D-35A0E676CD7F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

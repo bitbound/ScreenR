@@ -1,5 +1,5 @@
-﻿using ScreenR.Shared.Dtos;
-using ScreenR.Shared.Models;
+﻿using ScreenR.Desktop.Shared.Dtos;
+using ScreenR.Desktop.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;

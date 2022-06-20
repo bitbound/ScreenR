@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Shared.Enums
+namespace ScreenR.Desktop.Shared.Enums
 {
     public enum Platform
     {
@@ -12,6 +12,7 @@ namespace ScreenR.Shared.Enums
         Windows,
         Linux,
         MacOS,
-        MacCatalyst
+        MacCatalyst,
+        Browser
     }
 }

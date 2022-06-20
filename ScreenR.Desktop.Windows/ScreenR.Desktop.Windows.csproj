@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
 	<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 	<OutputType>Exe</OutputType>
-	<AssemblyName>ScreenR_Desktop</AssemblyName>
+	<AssemblyName>ScreenR</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,8 +1,8 @@
-﻿using ScreenR.Shared.Enums;
+﻿using ScreenR.Desktop.Shared.Enums;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
-namespace ScreenR.Shared.Models
+namespace ScreenR.Desktop.Shared.Models
 {
     [DataContract]
     public class Device

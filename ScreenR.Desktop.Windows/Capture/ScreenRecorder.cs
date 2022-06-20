@@ -1,6 +1,6 @@
 ﻿using ScreenR.Desktop.Core;
 using ScreenR.Desktop.Core.Interfaces;
-using ScreenR.Shared.Models;
+using ScreenR.Desktop.Shared.Models;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;

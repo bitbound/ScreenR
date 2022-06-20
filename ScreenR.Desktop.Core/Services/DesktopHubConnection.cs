@@ -3,10 +3,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ScreenR.Desktop.Core.Interfaces;
-using ScreenR.Shared.Extensions;
-using ScreenR.Shared.Interfaces;
-using ScreenR.Shared.Models;
-using ScreenR.Shared.Services;
+using ScreenR.Desktop.Shared.Extensions;
+using ScreenR.Desktop.Shared.Interfaces;
+using ScreenR.Desktop.Shared.Models;
+using ScreenR.Desktop.Shared.Services;
 
 namespace ScreenR.Desktop.Core.Services
 {

@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Shared.Models
+namespace ScreenR.Desktop.Shared.Models
 {
     public class ServiceDevice : Device
     {

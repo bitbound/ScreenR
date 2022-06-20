@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.SignalR.Client;
-using ScreenR.Shared.Interfaces;
-using ScreenR.Shared.Services;
+using ScreenR.Desktop.Shared.Interfaces;
+using ScreenR.Desktop.Shared.Services;
 using ScreenR.Web.Client;
 using ScreenR.Web.Client.Services;
 

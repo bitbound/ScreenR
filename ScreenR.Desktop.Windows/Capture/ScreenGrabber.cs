@@ -3,7 +3,7 @@ using Microsoft.IO;
 using PInvoke;
 using ScreenR.Desktop.Core;
 using ScreenR.Desktop.Core.Interfaces;
-using ScreenR.Shared.Models;
+using ScreenR.Desktop.Shared.Models;
 using ScreenR.Desktop.Windows.Helpers;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;

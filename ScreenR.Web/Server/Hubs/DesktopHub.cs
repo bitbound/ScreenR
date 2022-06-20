@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using ScreenR.Shared;
-using ScreenR.Shared.Dtos;
-using ScreenR.Shared.Interfaces;
-using ScreenR.Shared.Models;
+using ScreenR.Desktop.Shared;
+using ScreenR.Desktop.Shared.Dtos;
+using ScreenR.Desktop.Shared.Enums;
+using ScreenR.Desktop.Shared.Interfaces;
+using ScreenR.Desktop.Shared.Models;
 using ScreenR.Web.Server.Data;
 using ScreenR.Web.Server.Models;
 using ScreenR.Web.Server.Services;
@@ -69,12 +70,12 @@ namespace ScreenR.Web.Server.Hubs
 
             switch (device.Type)
             {
-                case Shared.Enums.ConnectionType.Unknown:
-                case Shared.Enums.ConnectionType.User:
-                case Shared.Enums.ConnectionType.Service:
+                case ConnectionType.Unknown:
+                case ConnectionType.User:
+                case ConnectionType.Service:
                     _logger.LogWarning("Unexpected connection type: {type}", device.Type);
                     break;
-                case Shared.Enums.ConnectionType.Desktop:
+                case ConnectionType.Desktop:
                     await Groups.AddToGroupAsync(Context.ConnectionId, device.SessionId.ToString());
                     break;
                 default:

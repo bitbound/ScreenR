@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Shared.Extensions
+namespace ScreenR.Desktop.Shared.Extensions
 {
     public static class UriExtensions
     {

@@ -1,4 +1,4 @@
-﻿using ScreenR.Shared.Models;
+﻿using ScreenR.Desktop.Shared.Models;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 
