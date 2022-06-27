@@ -10,7 +10,7 @@
         @ButtonContent
     </button>
     <ul class="dropdown-menu @DropDownMenuClass @_showClass" @onclick="ToggleShown" >
-        @ChildListItems
+       @ListItems
     </ul>
 </div>
 
@@ -31,9 +31,8 @@
     [Parameter]
     public string DropDownMenuClass { get; set; } = "";
 
-
     [Parameter]
-    public RenderFragment? ChildListItems { get; set; }
+    public RenderFragment? ListItems { get; set; }
 
     private void ToggleShown()
     {
