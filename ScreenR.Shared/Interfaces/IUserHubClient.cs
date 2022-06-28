@@ -1,4 +1,5 @@
-﻿using ScreenR.Shared.Enums;
+﻿using ScreenR.Shared.Dtos;
+using ScreenR.Shared.Enums;
 using ScreenR.Shared.Models;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,8 @@ namespace ScreenR.Shared.Interfaces
     {
         Task NotifyDesktopDeviceUpdated(DesktopDevice device);
         Task NotifyServiceDeviceUpdated(ServiceDevice device);
+        Task ReceiveWindowsSessions(WindowsSessions windowsSessions);
         Task ShowToast(string message, MessageLevel messageLevel);
+        Task ReceiveDto(byte[] dto);
     }
 }

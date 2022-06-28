@@ -5,7 +5,6 @@ using ScreenR.Shared.Interfaces;
 using ScreenR.Shared.Models;
 using ScreenR.Web.Server.Data;
 using ScreenR.Web.Server.Services;
-using System.Collections.Concurrent;
 
 namespace ScreenR.Web.Server.Hubs
 {
@@ -62,6 +61,12 @@ namespace ScreenR.Web.Server.Hubs
         {
             await _userHubContext.Clients.Client(userConnectionId).ShowToast(message, messageLevel);
         }
+
+        public async Task SendDtoToUser(byte[] dto, string userConnectionId)
+        {
+            await _userHubContext.Clients.Client(userConnectionId).ReceiveDto(dto);
+        }
+
         public async Task SetDeviceInfo(ServiceDevice device)
         {
             switch (device.Type)

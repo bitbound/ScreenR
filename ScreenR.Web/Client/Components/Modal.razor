@@ -1,0 +1,87 @@
+﻿<div class="modal fade @_showClass" @onclick="Close" style="display: @(_displayStyle); background-color: rgba(0,0,0,0.35);">
+    <div class="modal-dialog modal-dialog-scrollable" role="document" @onclick:stopPropagation>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    @TitleContent
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @onclick="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" >
+                @BodyContent
+
+            </div>
+            <div class="modal-footer">
+                @ButtonAreaContent
+
+                @if (ShowCloseButton)
+                {
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="Close">Close</button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private bool _isShown;
+    private string _showClass = string.Empty;
+    private string _displayStyle = string.Empty;
+
+    [Parameter]
+    public RenderFragment? BodyContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? ButtonAreaContent { get; set; }
+
+    [Parameter]
+    public bool IsShown
+    {
+        get => _isShown;
+        set
+        {
+            _isShown = value;
+            AnimateModal();
+        }
+    }
+
+    [Parameter]
+    public EventCallback OnClose { get ;set; }
+
+    [Parameter]
+    public bool ShowCloseButton { get; set; }
+
+    [Parameter]
+    public RenderFragment? TitleContent { get; set; }
+
+
+    private async void AnimateModal()
+    {
+        if (_isShown)
+        {
+            _displayStyle = "block";
+            await InvokeAsync(StateHasChanged);
+            // The fade animation won't work without a delay here.
+            await Task.Delay(100);
+            _showClass = "show";
+            await InvokeAsync(StateHasChanged);
+        }
+        else
+        {
+            _showClass = string.Empty;
+            await InvokeAsync(StateHasChanged);
+            await Task.Delay(100);
+            _displayStyle = string.Empty;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void Close()
+    {
+        IsShown = false;
+        OnClose.InvokeAsync();
+    }
+}

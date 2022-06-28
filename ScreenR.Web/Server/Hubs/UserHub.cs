@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using ScreenR.Shared.Dtos;
+using ScreenR.Shared.Enums;
 using ScreenR.Shared.Interfaces;
 using ScreenR.Shared.Models;
 using ScreenR.Web.Server.Data;
@@ -13,13 +14,16 @@ namespace ScreenR.Web.Server.Hubs
     {
         private readonly IHubContext<DesktopHub, IDesktopHubClient> _desktopHubContext;
         private readonly IHubContext<ServiceHub, IServiceHubClient> _serviceHubContext;
+        private readonly ILogger<UserHub> _logger;
 
         public UserHub(
             IHubContext<DesktopHub, IDesktopHubClient> deviceHubContext,
-            IHubContext<ServiceHub, IServiceHubClient> serviceHubContext)
+            IHubContext<ServiceHub, IServiceHubClient> serviceHubContext,
+            ILogger<UserHub> logger)
         {
             _desktopHubContext = deviceHubContext;
             _serviceHubContext = serviceHubContext;
+            _logger = logger;
         }
 
         public async IAsyncEnumerable<DesktopFrameChunk> GetDesktopStream(Guid sessionId, Guid requestId, string passphrase)
@@ -66,6 +70,29 @@ namespace ScreenR.Web.Server.Hubs
             await _serviceHubContext.Clients
                 .Group(deviceId.ToString())
                 .RequestDesktopStream(requestId, Context.ConnectionId);
+        }
+
+        public async Task RequestWindowsSessions(ConnectionType connectionType, Guid deviceOrSessionId, Guid requestId)
+        {
+            switch (connectionType)
+            {
+                case ConnectionType.Unknown:
+                case ConnectionType.User:
+                    _logger.LogWarning("Unexpected connection type: {type}", connectionType);
+                    break;
+                case ConnectionType.Service:
+                    await _serviceHubContext.Clients
+                        .Group(deviceOrSessionId.ToString())
+                        .RequestWindowsSessions(requestId, Context.ConnectionId);
+                    break;
+                case ConnectionType.Desktop:
+                    await _desktopHubContext.Clients
+                        .Group(deviceOrSessionId.ToString())
+                        .RequestWindowsSessions(requestId, Context.ConnectionId);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 }

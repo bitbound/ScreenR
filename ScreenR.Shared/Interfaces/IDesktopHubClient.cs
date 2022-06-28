@@ -10,6 +10,7 @@ namespace ScreenR.Shared.Interfaces
     public interface IDesktopHubClient
     {
         Task StartDesktopStream(StreamToken streamToken, string passphrase);
+        Task RequestWindowsSessions(Guid requestId, string requesterConnectionId);
     }
 
 }

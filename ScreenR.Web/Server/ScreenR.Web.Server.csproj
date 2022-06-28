@@ -9,9 +9,13 @@
 
   <ItemGroup>
     <Compile Remove="Data\Migrations\**" />
+    <Compile Remove="Downloads\**" />
     <Content Remove="Data\Migrations\**" />
+    <Content Remove="Downloads\**" />
     <EmbeddedResource Remove="Data\Migrations\**" />
+    <EmbeddedResource Remove="Downloads\**" />
     <None Remove="Data\Migrations\**" />
+    <None Remove="Downloads\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,10 +38,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Downloads\" />
   </ItemGroup>
 
 </Project>

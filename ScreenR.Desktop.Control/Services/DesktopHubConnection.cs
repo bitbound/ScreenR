@@ -1,17 +1,21 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
+﻿using MessagePack;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ScreenR.Desktop.Control.Interfaces;
+using ScreenR.Desktop.Shared.Native.Windows;
 using ScreenR.Desktop.Shared.Services;
+using ScreenR.Shared.Dtos;
 using ScreenR.Shared.Extensions;
+using ScreenR.Shared.Helpers;
 using ScreenR.Shared.Interfaces;
 using ScreenR.Shared.Models;
 using ScreenR.Shared.Services;
 
 namespace ScreenR.Desktop.Control.Services
 {
-    internal interface IDesktopHubConnection : IDesktopHubClient
+    internal interface IDesktopHubConnection
     {
         Task Connect();
     }
@@ -53,7 +57,8 @@ namespace ScreenR.Desktop.Control.Services
             _connection.Reconnecting += HubConnection_Reconnecting;
             _connection.Reconnected += HubConnection_Reconnected;
 
-            _connection.On<StreamToken, string>(nameof(StartDesktopStream), StartDesktopStream);
+            _connection.On<StreamToken, string>(nameof(IDesktopHubClient.StartDesktopStream), StartDesktopStream);
+            _connection.On<Guid, string>(nameof(IDesktopHubClient.RequestWindowsSessions), RequestWindowsSessions);
 
             while (!_appLifetime.ApplicationStopping.IsCancellationRequested)
             {
@@ -82,19 +87,6 @@ namespace ScreenR.Desktop.Control.Services
             }
         }
 
-        public async Task StartDesktopStream(StreamToken streamToken, string passphrase)
-        {
-            if (passphrase != _appState.Passphrase)
-            {
-                _logger.LogWarning("Invalid passphrase supplied: {passphrase}", passphrase);
-                return;
-            }
-
-            // TODO: Cancellation token.
-            // TODO: Throttle sender.
-            await _connection.SendAsync("SendDesktopStream", streamToken, _desktopStreamer.GetDesktopStream());
-        }
-
         private async Task HubConnection_Reconnected(string? arg)
         {
             _deviceInfo = _deviceCreator.CreateDesktop(_appState.DesktopId, true);
@@ -106,6 +98,42 @@ namespace ScreenR.Desktop.Control.Services
         {
             _logger.LogWarning(arg, "Reconnecting to desktop hub.");
             return Task.CompletedTask;
+        }
+
+        private async void RequestWindowsSessions(Guid requestId, string requesterConnectionId)
+        {
+            if (EnvironmentHelper.Platform != ScreenR.Shared.Enums.Platform.Windows)
+            {
+                _logger.LogWarning("Received request for Windows sessions, but platform is {platform}.", EnvironmentHelper.Platform);
+                return;
+            }
+
+            var sessions = new WindowsSessions()
+            {
+                RequestId = requestId,
+                Sessions = Win32Interop.GetActiveSessions()
+            };
+
+            await SendDtoToUser(sessions, requesterConnectionId);
+        }
+
+        private async Task SendDtoToUser<T>(T dto, string requesterConnectionId)
+            where T : BaseDto
+        {
+            var serializedDto = MessagePackSerializer.Serialize(dto);
+            await _connection.InvokeAsync("SendDtoToUser", serializedDto, requesterConnectionId);
+        }
+        private async Task StartDesktopStream(StreamToken streamToken, string passphrase)
+        {
+            if (passphrase != _appState.Passphrase)
+            {
+                _logger.LogWarning("Invalid passphrase supplied: {passphrase}", passphrase);
+                return;
+            }
+
+            // TODO: Cancellation token.
+            // TODO: Throttle sender.
+            await _connection.SendAsync("SendDesktopStream", streamToken, _desktopStreamer.GetDesktopStream());
         }
         private class RetryPolicy : IRetryPolicy
         {

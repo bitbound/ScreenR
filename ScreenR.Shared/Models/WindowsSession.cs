@@ -1,11 +1,12 @@
-﻿using System;
+﻿using ScreenR.Shared.Dtos;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScreenR.Desktop.Shared.Native.Windows
+namespace ScreenR.Shared.Models
 {
     [DataContract]
     public enum SessionType
@@ -21,18 +22,18 @@ namespace ScreenR.Desktop.Shared.Native.Windows
     }
 
     [DataContract]
-    public class WindowsSession
+    public class WindowsSession : BaseDto
     {
-        [DataMember(Name = "ID")]
+        [DataMember]
         public int ID { get; set; }
 
-        [DataMember(Name = "Name")]
+        [DataMember]
         public string Name { get; set; } = string.Empty;
 
-        [DataMember(Name = "Type")]
+        [DataMember]
         public SessionType Type { get; set; }
 
-        [DataMember(Name = "Username")]
+        [DataMember]
         public string Username { get; set; } = string.Empty;
     }
 }

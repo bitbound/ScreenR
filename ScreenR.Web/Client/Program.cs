@@ -33,7 +33,6 @@ builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().Cre
 builder.Services.AddSingleton<IUserHubConnection, UserHubConnection>();
 builder.Services.AddSingleton<IHubConnectionBuilderFactory, HubConnectionBuilderFactory>();
 builder.Services.AddSingleton<IToastService, ToastService>();
-builder.Services.AddSingleton<IModalService, ModalService>();
 builder.Services.AddScoped<IJsInterop, JsInterop>();
 builder.Services.AddScoped<IApiClient, ApiClient>();
 builder.Services.AddScoped<IAnonymousApiClient, AnonymousApiClient>();

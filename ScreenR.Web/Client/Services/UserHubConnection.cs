@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.DotNet.Scaffolding.Shared.Messaging;
+using ScreenR.Shared;
 using ScreenR.Shared.Dtos;
 using ScreenR.Shared.Enums;
 using ScreenR.Shared.Interfaces;
@@ -14,7 +15,7 @@ using System.Net;
 
 namespace ScreenR.Web.Client.Services
 {
-    public interface IUserHubConnection : IUserHubClient
+    public interface IUserHubConnection
     {
         event EventHandler<DesktopDevice>? DesktopDeviceUpdated;
         event EventHandler<ServiceDevice>? ServiceDeviceUpdated;
@@ -22,15 +23,18 @@ namespace ScreenR.Web.Client.Services
         Task Connect();
         IAsyncEnumerable<DesktopFrameChunk> GetDesktopStream(Guid sessionId, Guid requestId, string passphrase = "");
         Task RequestDesktopStream(Guid deviceId, Guid requestId);
+
+        Task<Result<WindowsSessions>> RequestWindowsSessions(Device device);
     }
 
-    public class UserHubConnection : IUserHubConnection
+    public class UserHubConnection : HubConnectionBase, IUserHubConnection
     {
         private readonly HubConnection _connection;
         private readonly IHttpMessageHandlerFactory _handlerFactory;
-        private readonly IToastService _toastService;
         private readonly ILogger<UserHubConnection> _logger;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IToastService _toastService;
+
         public UserHubConnection(
             IServiceScopeFactory scopeFactory,
             IWebAssemblyHostEnvironment hostEnv,
@@ -47,10 +51,6 @@ namespace ScreenR.Web.Client.Services
             _connection = builderFactory.CreateBuilder()
                .WithUrl($"{hostEnv.BaseAddress.TrimEnd('/')}/user-hub", options =>
                {
-                   //options.HttpMessageHandlerFactory = (x) =>
-                   //{
-                   //    return _handlerFactory.CreateHandler("ScreenR.Web.ServerAPI");
-                   //};
                    options.AccessTokenProvider = async () => {
                        using var scope = _scopeFactory.CreateScope();
                        var tokenProvider = scope.ServiceProvider.GetRequiredService<IAccessTokenProvider>();
@@ -87,9 +87,9 @@ namespace ScreenR.Web.Client.Services
             _connection.Reconnecting += HubConnection_Reconnecting;
             _connection.Reconnected += HubConnection_Reconnected;
 
-            _connection.On<DesktopDevice>(nameof(NotifyDesktopDeviceUpdated), NotifyDesktopDeviceUpdated);
-            _connection.On<ServiceDevice>(nameof(NotifyServiceDeviceUpdated), NotifyServiceDeviceUpdated);
-            _connection.On<string, MessageLevel>(nameof(ShowToast), ShowToast);
+            _connection.On<DesktopDevice>(nameof(IUserHubClient.NotifyDesktopDeviceUpdated), NotifyDesktopDeviceUpdated);
+            _connection.On<ServiceDevice>(nameof(IUserHubClient.NotifyServiceDeviceUpdated), NotifyServiceDeviceUpdated);
+            _connection.On<string, MessageLevel>(nameof(IUserHubClient.ShowToast), ShowToast);
 
             while (true)
             {
@@ -122,27 +122,52 @@ namespace ScreenR.Web.Client.Services
             }
         }
 
-        public Task NotifyDesktopDeviceUpdated(DesktopDevice device)
+        public async Task<Result<WindowsSessions>> RequestWindowsSessions(Device device)
         {
-            TryInvoke(() => DesktopDeviceUpdated?.Invoke(this, device));
-            return Task.CompletedTask;
-        }
+            try
+            {
+                var requestId = Guid.NewGuid();
 
-        public Task NotifyServiceDeviceUpdated(ServiceDevice device)
-        {
-            TryInvoke(() => ServiceDeviceUpdated?.Invoke(this, device));
-            return Task.CompletedTask;
+                var result = await WaitForResponse<WindowsSessions>(
+                    _connection,
+                    nameof(IUserHubClient.ReceiveDto),
+                    requestId,
+                    async () =>
+                    {
+                        if (device is ServiceDevice serviceDevice)
+                        {
+                            await _connection.InvokeAsync("RequestWindowsSessions", device.Type, serviceDevice.DeviceId, requestId);
+                        }
+                        else if (device is DesktopDevice desktopDevice)
+                        {
+                            await _connection.InvokeAsync("RequestWindowsSessions", device.Type, desktopDevice.SessionId, requestId);
+                        }
+                    });
+
+                if (!result.IsSuccess)
+                {
+                    if (result.Exception is not null)
+                    {
+                        _logger.LogError(result.Exception, "Error while getting Windows sessions.");
+                    }
+                    else
+                    {
+                        _logger.LogError("{msg}", result.Error);
+                    }
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while getting windows sessions.");
+                return Result.Fail<WindowsSessions>(ex);
+            }
         }
 
         public async Task RequestDesktopStream(Guid deviceId, Guid requestId)
         {
             await _connection.InvokeAsync(nameof(RequestDesktopStream), deviceId, requestId);
-        }
-
-        public Task ShowToast(string message, MessageLevel messageLevel)
-        {
-            _toastService.ShowToast(message, messageLevel);
-            return Task.CompletedTask;
         }
 
         private Task HubConnection_Reconnected(string? arg)
@@ -157,6 +182,22 @@ namespace ScreenR.Web.Client.Services
             return Task.CompletedTask;
         }
 
+        private Task NotifyDesktopDeviceUpdated(DesktopDevice device)
+        {
+            TryInvoke(() => DesktopDeviceUpdated?.Invoke(this, device));
+            return Task.CompletedTask;
+        }
+
+        private Task NotifyServiceDeviceUpdated(ServiceDevice device)
+        {
+            TryInvoke(() => ServiceDeviceUpdated?.Invoke(this, device));
+            return Task.CompletedTask;
+        }
+        private Task ShowToast(string message, MessageLevel messageLevel)
+        {
+            _toastService.ShowToast(message, messageLevel);
+            return Task.CompletedTask;
+        }
         private void TryInvoke(Action action)
         {
             try

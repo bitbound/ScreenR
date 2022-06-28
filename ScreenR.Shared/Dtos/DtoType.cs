@@ -10,6 +10,8 @@ namespace ScreenR.Shared.Dtos
     [DataContract]
     public enum DtoType
     {
-        DesktopFrameChunk
+        Unknown,
+        DesktopFrameChunk,
+        WindowsSessions
     }
 }

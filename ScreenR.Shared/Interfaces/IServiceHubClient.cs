@@ -9,6 +9,7 @@ namespace ScreenR.Shared.Interfaces
     public interface IServiceHubClient
     {
         Task RequestDesktopStream(Guid requestId, string requesterConnectionId);
+        Task RequestWindowsSessions(Guid requestId, string requesterConnectionId);
     }
 
 }

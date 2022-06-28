@@ -50,7 +50,7 @@
                                 </ButtonContent>
                                 <ChildListItems>
                                     <li>
-                                        <button class="dropdown-item" @onclick="() => StartRemoteControl(device)">
+                                        <button class="dropdown-item" @onclick="() => ShowSessionSelect(device)">
                                             <i class="oi oi-laptop" title="Remote Control"></i>
                                             <span class="ml-2">Remote Control</span>
                                         </button>
@@ -118,7 +118,7 @@
                                 </ButtonContent>
                                 <ChildListItems>
                                     <li>
-                                        <button class="dropdown-item" @onclick="() => StartRemoteControl(device)">
+                                        <button class="dropdown-item" @onclick="() => ShowSessionSelect(device)">
                                             <i class="oi oi-laptop" title="Remote Control"></i>
                                             <span class="ml-2">Remote Control</span>
                                         </button>
@@ -143,9 +143,41 @@
     </table>
 </div>
 
+<Modal IsShown="_showSessionSelect"
+       ShowCloseButton="true"
+       OnClose="OnSessionSelectClosed">
+
+    <TitleContent>
+        <span>Select Target Session</span>
+    </TitleContent>
+
+    <BodyContent>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; column-gap: 10px; row-gap: 15px; align-items: center;">
+            @foreach (var session in _windowsSessions)
+            {
+                <div>
+                    Session ID: @(session.ID)
+                    <br />
+                    Session Name: @(session.Name)
+                    <br />
+                    User: @(session.Username)
+                 </div>
+                <div>
+                    <button class="btn btn-primary">Connect</button>
+                </div>
+            }
+        </div>
+    </BodyContent>
+</Modal>
+
 @code {
     private readonly ObservableCollection<DesktopDevice> _desktopDevices = new();
     private readonly ObservableCollection<ServiceDevice> _serviceDevices = new();
+
+    private IEnumerable<WindowsSession> _windowsSessions = Enumerable.Empty<WindowsSession>();
+
+    private Device? _selectedDevice;
+    private bool _showSessionSelect;
 
     #nullable disable
     [CascadingParameter]
@@ -222,18 +254,52 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task StartRemoteControl(ServiceDevice device)
+    private void OnSessionSelectClosed()
     {
-        using var _ = Loader.Show("Sending request");
-        var requestId = Guid.NewGuid();
-        await UserHub.RequestDesktopStream(device.DeviceId, requestId);
-        await Task.Delay(3000);
+        _showSessionSelect = false;
     }
 
-    private async Task StartRemoteControl(DesktopDevice device)
+    private async void ShowSessionSelect(Device device)
     {
-        using var _ = Loader.Show("Sending request");
-        await Task.Delay(3000);
+        if (device.Platform == ScreenR.Shared.Enums.Platform.Windows)
+        {
+            var result = await UserHub.RequestWindowsSessions(device);
+
+            if (result.IsSuccess && result.Value is not null)
+            {
+                _windowsSessions = result.Value.Sessions;
+                _selectedDevice = device;
+                _showSessionSelect = true;
+                await InvokeAsync(StateHasChanged);
+            }
+            else
+            {
+                Toasts.ShowToast("Failed to get Windows sessions.", ScreenR.Shared.Enums.MessageLevel.Error);
+            }
+        }
+        else
+        {
+            await StartRemoteControl(device);
+        }
     }
 
+    private async Task StartRemoteControl(Device device)
+    {
+        if (device is ServiceDevice serviceDevice)
+        {
+            using var _ = Loader.Show("Sending request");
+            var requestId = Guid.NewGuid();
+            await UserHub.RequestDesktopStream(serviceDevice.DeviceId, requestId);
+            await Task.Delay(3000);
+        }
+        else if (device is DesktopDevice desktopDevice)
+        {
+            using var _ = Loader.Show("Getting stream");
+            await Task.Delay(3000);
+        }
+        else
+        {
+            Logger.LogError("Unknown device type.");
+        }
+    }
 }

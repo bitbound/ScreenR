@@ -30,7 +30,7 @@ namespace ScreenR.Web.Client.Services
             {
                 MessageLevel.Information => "bg-info",
                 MessageLevel.Warning => "bg-warning",
-                MessageLevel.Error => "bg-error",
+                MessageLevel.Error => "bg-danger",
                 MessageLevel.Success => "bg-success",
                 _ => "bg-info"
             };

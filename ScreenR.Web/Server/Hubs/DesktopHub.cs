@@ -62,6 +62,10 @@ namespace ScreenR.Web.Server.Hubs
             await base.OnDisconnectedAsync(exception);
         }
 
+        public async Task SendDtoToUser(byte[] dto, string userConnectionId)
+        {
+            await _userHubContext.Clients.Client(userConnectionId).ReceiveDto(dto);
+        }
         public async Task SetDeviceInfo(DesktopDevice device)
         {
             device.LastOnline = DateTimeOffset.Now;

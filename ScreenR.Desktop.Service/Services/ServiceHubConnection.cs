@@ -1,11 +1,15 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
+﻿using MessagePack;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ScreenR.Desktop.Shared;
+using ScreenR.Desktop.Shared.Native.Windows;
 using ScreenR.Desktop.Shared.Services;
+using ScreenR.Shared.Dtos;
 using ScreenR.Shared.Enums;
 using ScreenR.Shared.Extensions;
+using ScreenR.Shared.Helpers;
 using ScreenR.Shared.Interfaces;
 using ScreenR.Shared.Services;
 using System;
@@ -18,18 +22,17 @@ namespace ScreenR.Desktop.Service.Services
 {
     internal interface IServiceHubConnection
     {
-        HubConnection Connection { get; }
         Task Connect();
     }
 
-    internal class ServiceHubConnection : IServiceHubConnection, IServiceHubClient
+    internal class ServiceHubConnection : IServiceHubConnection
     {
+        public readonly HubConnection _connection;
         private readonly IHostApplicationLifetime _appLifetime;
         private readonly IAppState _appState;
         private readonly IDeviceCreator _deviceCreator;
-        private readonly IProcessLauncher _processLauncher;
         private readonly ILogger<ServiceHubConnection> _logger;
-        public HubConnection Connection { get; }
+        private readonly IProcessLauncher _processLauncher;
 
         public ServiceHubConnection(
              IHostApplicationLifetime appLifetime,
@@ -45,31 +48,31 @@ namespace ScreenR.Desktop.Service.Services
             _processLauncher = processLauncher;
             _logger = logger;
 
-            Connection = builderFactory.CreateBuilder()
+            _connection = builderFactory.CreateBuilder()
                 .WithUrl($"{_appState.ServerUrl.Trim()}/service-hub")
                 .AddMessagePackProtocol()
                 .WithAutomaticReconnect(new RetryPolicy())
                 .Build();
         }
 
-
         public async Task Connect()
         {
 
-            Connection.Reconnecting += HubConnection_Reconnecting; ;
-            Connection.Reconnected += HubConnection_Reconnected;
-            Connection.On<Guid, string>("RequestDesktopStream", OnRequestDesktopStream);
+            _connection.Reconnecting += HubConnection_Reconnecting; ;
+            _connection.Reconnected += HubConnection_Reconnected;
+            _connection.On<Guid, string>(nameof(IServiceHubClient.RequestDesktopStream), RequestDesktopStream);
+            _connection.On<Guid, string>(nameof(IServiceHubClient.RequestWindowsSessions), RequestWindowsSessions);
 
             while (!_appLifetime.ApplicationStopping.IsCancellationRequested)
             {
                 try
                 {
-                    await Connection.StartAsync(_appLifetime.ApplicationStopping);
+                    await _connection.StartAsync(_appLifetime.ApplicationStopping);
                     _logger.LogInformation("Connected to server.");
 
                     var deviceInfo = _deviceCreator.CreateService(_appState.DeviceId, true);
 
-                    await Connection.SendAsync("SetDeviceInfo", deviceInfo, cancellationToken: _appLifetime.ApplicationStopping);
+                    await _connection.SendAsync("SetDeviceInfo", deviceInfo, cancellationToken: _appLifetime.ApplicationStopping);
                     break;
                 }
                 catch (HttpRequestException ex)
@@ -84,7 +87,20 @@ namespace ScreenR.Desktop.Service.Services
             }
         }
 
-        private async Task OnRequestDesktopStream(Guid requestId, string requesterConnectionId)
+        private async Task HubConnection_Reconnected(string? arg)
+        {
+            var deviceInfo = _deviceCreator.CreateService(_appState.DeviceId, true);
+            await _connection.SendAsync("SetDeviceInfo", deviceInfo);
+            _logger.LogInformation("Reconnected to device hub.");
+        }
+
+        private Task HubConnection_Reconnecting(Exception? arg)
+        {
+            _logger.LogWarning(arg, "Reconnecting to device hub.");
+            return Task.CompletedTask;
+        }
+
+        private async Task RequestDesktopStream(Guid requestId, string requesterConnectionId)
         {
             try
             {
@@ -95,14 +111,14 @@ namespace ScreenR.Desktop.Service.Services
                     if (stream is null)
                     {
                         _logger.LogError("Stream is null while downloading remote control.");
-                        await Connection.InvokeAsync("SendToast", "Failed to download remote control app.", MessageLevel.Error, requesterConnectionId);
+                        await _connection.InvokeAsync("SendToast", "Failed to download remote control app.", MessageLevel.Error, requesterConnectionId);
                         return;
                     }
                     using var fs = new FileStream(FileNames.RemoteControl, FileMode.Create);
                     await stream.CopyToAsync(fs);
                 }
 
-                await Connection.InvokeAsync("SendToast", "Remote control starting", MessageLevel.Success, requesterConnectionId);
+                await _connection.InvokeAsync("SendToast", "Remote control starting", MessageLevel.Success, requesterConnectionId);
                 await _processLauncher.LaunchDesktopStreamer(_appState.ServerUrl.ToString(), requestId, requesterConnectionId);
             }
             catch (Exception ex)
@@ -111,22 +127,28 @@ namespace ScreenR.Desktop.Service.Services
             }
         }
 
-        private async Task HubConnection_Reconnected(string? arg)
+        private async void RequestWindowsSessions(Guid requestId, string requesterConnectionId)
         {
-            var deviceInfo = _deviceCreator.CreateService(_appState.DeviceId, true);
-            await Connection.SendAsync("SetDeviceInfo", deviceInfo);
-            _logger.LogInformation("Reconnected to device hub.");
+            if (EnvironmentHelper.Platform != Platform.Windows)
+            {
+                _logger.LogWarning("Received request for Windows sessions, but platform is {platform}.", EnvironmentHelper.Platform);
+                return;
+            }
+
+            var sessions = new WindowsSessions()
+            {
+                RequestId = requestId,
+                Sessions = Win32Interop.GetActiveSessions()
+            };
+
+            await SendDtoToUser(sessions, requesterConnectionId);
         }
 
-        private Task HubConnection_Reconnecting(Exception? arg)
+        private async Task SendDtoToUser<T>(T dto, string requesterConnectionId)
+            where T : BaseDto
         {
-            _logger.LogWarning(arg, "Reconnecting to device hub.");
-            return Task.CompletedTask;
-        }
-
-        public async Task RequestDesktopStream(Guid requestId, string requesterConnectionId)
-        {
-            await _processLauncher.LaunchDesktopStreamer(_appState.ServerUrl.ToString(), requestId, requesterConnectionId);
+            var serializedDto = MessagePackSerializer.Serialize(dto);
+            await _connection.InvokeAsync("SendDtoToUser", serializedDto, requesterConnectionId);
         }
 
         private class RetryPolicy : IRetryPolicy
