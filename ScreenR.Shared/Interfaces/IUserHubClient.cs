@@ -13,8 +13,7 @@ namespace ScreenR.Shared.Interfaces
     {
         Task NotifyDesktopDeviceUpdated(DesktopDevice device);
         Task NotifyServiceDeviceUpdated(ServiceDevice device);
-        Task ReceiveWindowsSessions(WindowsSessions windowsSessions);
         Task ShowToast(string message, MessageLevel messageLevel);
-        Task ReceiveDto(byte[] dto);
+        Task ReceiveDto(DtoWrapper dto);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using ScreenR.Shared.Dtos;
 using ScreenR.Shared.Enums;
 using ScreenR.Shared.Interfaces;
 using ScreenR.Shared.Models;
@@ -62,7 +63,7 @@ namespace ScreenR.Web.Server.Hubs
             await _userHubContext.Clients.Client(userConnectionId).ShowToast(message, messageLevel);
         }
 
-        public async Task SendDtoToUser(byte[] dto, string userConnectionId)
+        public async Task SendDtoToUser(DtoWrapper dto, string userConnectionId)
         {
             await _userHubContext.Clients.Client(userConnectionId).ReceiveDto(dto);
         }

@@ -22,7 +22,7 @@ namespace ScreenR.Shared.Models
     }
 
     [DataContract]
-    public class WindowsSession : BaseDto
+    public class WindowsSession : DtoWrapper
     {
         [DataMember]
         public int ID { get; set; }

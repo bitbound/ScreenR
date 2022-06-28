@@ -135,20 +135,29 @@ namespace ScreenR.Desktop.Service.Services
                 return;
             }
 
-            var sessions = new WindowsSessions()
-            {
-                RequestId = requestId,
-                Sessions = Win32Interop.GetActiveSessions()
-            };
-
-            await SendDtoToUser(sessions, requesterConnectionId);
+            var sessions = Win32Interop.GetActiveSessions();
+            await SendDtoToUser(DtoType.WindowsSessions, sessions,requestId, requesterConnectionId);
         }
 
-        private async Task SendDtoToUser<T>(T dto, string requesterConnectionId)
-            where T : BaseDto
+        private async Task SendDtoToUser(DtoType dtoType, object dto, Guid requestId, string requesterConnectionId)
         {
             var serializedDto = MessagePackSerializer.Serialize(dto);
-            await _connection.InvokeAsync("SendDtoToUser", serializedDto, requesterConnectionId);
+
+            var chunks = serializedDto.Chunk(50_000).ToArray();
+
+            for (var i = 0; i < chunks.Length; i++)
+            {
+                var wrapper = new DtoWrapper()
+                {
+                    DtoChunk = chunks[i],
+                    DtoType = dtoType,
+                    IsFirstChunk = i == 0,
+                    IsLastChunk = i == chunks.Length - 1,
+                    RequestId = requestId
+                };
+
+                await _connection.InvokeAsync("SendDtoToUser", wrapper, requesterConnectionId);
+            }
         }
 
         private class RetryPolicy : IRetryPolicy

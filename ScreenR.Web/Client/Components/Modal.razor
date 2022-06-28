@@ -44,7 +44,17 @@
         set
         {
             _isShown = value;
-            AnimateModal();
+            if (_isShown)
+            {
+                _displayStyle = "block";
+                _showClass = "show";
+            }
+            else
+            {
+                _showClass = string.Empty;
+
+                _displayStyle = string.Empty;
+            }
         }
     }
 
@@ -58,30 +68,8 @@
     public RenderFragment? TitleContent { get; set; }
 
 
-    private async void AnimateModal()
-    {
-        if (_isShown)
-        {
-            _displayStyle = "block";
-            await InvokeAsync(StateHasChanged);
-            // The fade animation won't work without a delay here.
-            await Task.Delay(100);
-            _showClass = "show";
-            await InvokeAsync(StateHasChanged);
-        }
-        else
-        {
-            _showClass = string.Empty;
-            await InvokeAsync(StateHasChanged);
-            await Task.Delay(100);
-            _displayStyle = string.Empty;
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-
     private void Close()
     {
-        IsShown = false;
         OnClose.InvokeAsync();
     }
 }

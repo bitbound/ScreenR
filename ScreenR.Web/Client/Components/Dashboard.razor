@@ -50,7 +50,7 @@
                                 </ButtonContent>
                                 <ListItems>
                                     <DropdownListItem>
-                                        <button class="dropdown-item" @onclick="() => ShowSessionSelect(device)">
+                                        <button class="dropdown-item" @onclick="async () => await ShowSessionSelect(device)">
                                             <i class="oi oi-laptop" title="Remote Control"></i>
                                             <span class="ml-2">Remote Control</span>
                                         </button>
@@ -118,7 +118,7 @@
                                 </ButtonContent>
                                 <ListItems>
                                     <DropdownListItem>
-                                        <button class="dropdown-item" @onclick="() => ShowSessionSelect(device)">
+                                        <button class="dropdown-item" @onclick="async () => await ShowSessionSelect(device)">
                                             <i class="oi oi-laptop" title="Remote Control"></i>
                                             <span class="ml-2">Remote Control</span>
                                         </button>
@@ -259,7 +259,7 @@
         _showSessionSelect = false;
     }
 
-    private async void ShowSessionSelect(Device device)
+    private async Task ShowSessionSelect(Device device)
     {
         if (device.Platform == ScreenR.Shared.Enums.Platform.Windows)
         {
@@ -267,10 +267,9 @@
 
             if (result.IsSuccess && result.Value is not null)
             {
-                _windowsSessions = result.Value.Sessions;
+                _windowsSessions = result.Value;
                 _selectedDevice = device;
                 _showSessionSelect = true;
-                await InvokeAsync(StateHasChanged);
             }
             else
             {

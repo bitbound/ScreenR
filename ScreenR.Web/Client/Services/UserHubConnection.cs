@@ -24,7 +24,7 @@ namespace ScreenR.Web.Client.Services
         IAsyncEnumerable<DesktopFrameChunk> GetDesktopStream(Guid sessionId, Guid requestId, string passphrase = "");
         Task RequestDesktopStream(Guid deviceId, Guid requestId);
 
-        Task<Result<WindowsSessions>> RequestWindowsSessions(Device device);
+        Task<Result<List<WindowsSession>>> RequestWindowsSessions(Device device);
     }
 
     public class UserHubConnection : HubConnectionBase, IUserHubConnection
@@ -42,6 +42,7 @@ namespace ScreenR.Web.Client.Services
             IHubConnectionBuilderFactory builderFactory,
             IToastService toastService,
             ILogger<UserHubConnection> logger)
+            : base(logger)
         {
             _scopeFactory = scopeFactory;
             _handlerFactory = handlerFactory;
@@ -122,13 +123,13 @@ namespace ScreenR.Web.Client.Services
             }
         }
 
-        public async Task<Result<WindowsSessions>> RequestWindowsSessions(Device device)
+        public async Task<Result<List<WindowsSession>>> RequestWindowsSessions(Device device)
         {
             try
             {
                 var requestId = Guid.NewGuid();
 
-                var result = await WaitForResponse<WindowsSessions>(
+                var result = await WaitForResponse<List<WindowsSession>>(
                     _connection,
                     nameof(IUserHubClient.ReceiveDto),
                     requestId,
@@ -161,7 +162,7 @@ namespace ScreenR.Web.Client.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while getting windows sessions.");
-                return Result.Fail<WindowsSessions>(ex);
+                return Result.Fail<List<WindowsSession>>(ex);
             }
         }
 

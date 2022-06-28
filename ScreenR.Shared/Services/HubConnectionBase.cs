@@ -1,7 +1,9 @@
 ﻿using MessagePack;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.Logging;
 using ScreenR.Shared.Dtos;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,29 +13,49 @@ namespace ScreenR.Shared.Services
 {
     public class HubConnectionBase
     {
+        private static readonly ConcurrentDictionary<Guid, byte[]> _dtoChunks = new();
+        private readonly ILogger<HubConnectionBase> _logger;
+
+        public HubConnectionBase(ILogger<HubConnectionBase> logger)
+        {
+            _logger = logger;
+        }
+
         protected async Task<Result<T>> WaitForResponse<T>(
             HubConnection connection, 
             string methodName, 
             Guid requestId,
             Action sendAction, 
             int timeoutMs = 5_000)
-
-            where T : BaseDto
         {
             try
             {
                 T? returnValue = default;
                 var signal = new SemaphoreSlim(0, 1);
 
-                using var token = connection.On<byte[]>(methodName, dtoBytes =>
+                using var token = connection.On<DtoWrapper>(methodName, wrapper =>
                 {
-                    var baseDto = MessagePackSerializer.Deserialize<BaseDto>(dtoBytes);
-
-                    if (baseDto.RequestId == requestId)
+                    try
                     {
-                        returnValue = MessagePackSerializer.Deserialize<T>(dtoBytes);
-                        signal.Release();
+                        if (wrapper.RequestId == requestId)
+                        {
+                            _dtoChunks.AddOrUpdate(requestId, wrapper.DtoChunk, (k, v) =>
+                            {
+                                return v.Concat(wrapper.DtoChunk).ToArray();
+                            });
+
+                            if (wrapper.IsLastChunk && _dtoChunks.TryRemove(requestId, out var concatChunks))
+                            {
+                                returnValue = MessagePackSerializer.Deserialize<T>(concatChunks);
+                                signal.Release();
+                            }
+                        }
                     }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error while handling DTO wrapper.");
+                    }
+                 
                 });
 
                 sendAction.Invoke();

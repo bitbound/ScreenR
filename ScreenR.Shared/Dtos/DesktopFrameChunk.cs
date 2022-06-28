@@ -9,16 +9,19 @@ using System.Threading.Tasks;
 namespace ScreenR.Shared.Dtos
 {
     [DataContract]
-    public class DesktopFrameChunk : BaseDto
+    public class DesktopFrameChunk : DtoWrapper
     {
+        public DesktopFrameChunk()
+        {
+            DtoType = DtoType.DesktopFrameChunk;
+        }
+
         [DataMember]
         public Rectangle Area { get; init; }
 
         [DataMember]
-        public override DtoType DtoType { get; init; } = DtoType.DesktopFrameChunk;
-
-        [DataMember]
         public bool EndOfFrame { get; init; }
+
         [DataMember]
         public byte[] ImageBytes { get; init; } = Array.Empty<byte>();
 
