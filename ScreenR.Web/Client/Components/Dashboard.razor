@@ -163,7 +163,7 @@
                     User: @(session.Username)
                  </div>
                 <div>
-                    <button class="btn btn-primary">Connect</button>
+                    <button class="btn btn-primary" @onclick="@(async () => await StartRemoteControl(session.ID))">Connect</button>
                 </div>
             }
         </div>
@@ -261,6 +261,8 @@
 
     private async Task ShowSessionSelect(Device device)
     {
+        _selectedDevice = device;
+
         if (device.Platform == ScreenR.Shared.Enums.Platform.Windows)
         {
             var result = await UserHub.RequestWindowsSessions(device);
@@ -268,7 +270,6 @@
             if (result.IsSuccess && result.Value is not null)
             {
                 _windowsSessions = result.Value;
-                _selectedDevice = device;
                 _showSessionSelect = true;
             }
             else
@@ -282,19 +283,42 @@
         }
     }
 
+    private async Task StartRemoteControl(int sessionId)
+    {
+        if (_selectedDevice is null)
+        {
+            Logger.LogError("No device is selected.");
+            return;
+        }
+
+        await StartRemoteControl(_selectedDevice, sessionId);
+    }
+
     private async Task StartRemoteControl(Device device)
     {
-        if (device is ServiceDevice serviceDevice)
+        await StartRemoteControl(device, -1);
+    }
+
+
+    private async Task StartRemoteControl(Device device, int windowsSessionId)
+    {
+        if (_selectedDevice is ServiceDevice serviceDevice)
         {
             using var _ = Loader.Show("Sending request");
             var requestId = Guid.NewGuid();
             await UserHub.RequestDesktopStream(serviceDevice.DeviceId, requestId);
-            await Task.Delay(3000);
+            AppState.RemoteSessions.Add(new RemoteSession()
+            {
+                SessionId = requestId
+            });
         }
-        else if (device is DesktopDevice desktopDevice)
+        else if (_selectedDevice is DesktopDevice desktopDevice)
         {
             using var _ = Loader.Show("Getting stream");
-            await Task.Delay(3000);
+            AppState.RemoteSessions.Add(new RemoteSession()
+            {
+                SessionId = desktopDevice.SessionId
+            });
         }
         else
         {
