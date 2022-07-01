@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace ScreenR.Shared.Models
 {
+    [DataContract]
     public class ServiceDevice : Device
     {
         [DataMember]

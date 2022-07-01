@@ -12,6 +12,9 @@ namespace ScreenR.Shared.Dtos
     {
         Unknown,
         DesktopFrameChunk,
-        WindowsSessions
+        WindowsSessions,
+        DesktopDeviceUpdated,
+        ServiceDeviceUpdated,
+        DisplayList
     }
 }

@@ -14,7 +14,7 @@ namespace ScreenR.Shared.Models
         public Architecture Architecture { get; init; }
 
         [DataMember]
-        public string ComputerName { get; init; } = string.Empty;
+        public string Name { get; init; } = string.Empty;
 
 
         [DataMember]

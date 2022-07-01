@@ -111,7 +111,7 @@ namespace ScreenR.Desktop.Service.Services
                     if (stream is null)
                     {
                         _logger.LogError("Stream is null while downloading remote control.");
-                        await _connection.InvokeAsync("SendToast", "Failed to download remote control app.", MessageLevel.Error, requesterConnectionId);
+                        await _connection.InvokeAsync("SendToast", "Download failure on client", MessageLevel.Error, requesterConnectionId);
                         return;
                     }
                     using var fs = new FileStream(FileNames.RemoteControl, FileMode.Create);
@@ -136,26 +136,13 @@ namespace ScreenR.Desktop.Service.Services
             }
 
             var sessions = Win32Interop.GetActiveSessions();
-            await SendDtoToUser(DtoType.WindowsSessions, sessions,requestId, requesterConnectionId);
+            await SendDtoToUser(sessions, DtoType.WindowsSessions, requestId, requesterConnectionId);
         }
 
-        private async Task SendDtoToUser(DtoType dtoType, object dto, Guid requestId, string requesterConnectionId)
+        private async Task SendDtoToUser<T>(T dto, DtoType dtoType, Guid requestId, string requesterConnectionId)
         {
-            var serializedDto = MessagePackSerializer.Serialize(dto);
-
-            var chunks = serializedDto.Chunk(50_000).ToArray();
-
-            for (var i = 0; i < chunks.Length; i++)
+            foreach (var wrapper in DtoChunker.ChunkDto(dto, dtoType, requestId))
             {
-                var wrapper = new DtoWrapper()
-                {
-                    DtoChunk = chunks[i],
-                    DtoType = dtoType,
-                    IsFirstChunk = i == 0,
-                    IsLastChunk = i == chunks.Length - 1,
-                    RequestId = requestId
-                };
-
                 await _connection.InvokeAsync("SendDtoToUser", wrapper, requesterConnectionId);
             }
         }

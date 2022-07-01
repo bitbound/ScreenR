@@ -55,6 +55,13 @@ namespace ScreenR.Web.Server.Hubs
 
         }
 
+        public async Task GetDisplays(Guid sessionId, Guid requestId)
+        {
+            await _desktopHubContext.Clients
+               .Group(sessionId.ToString())
+               .GetDisplays(requestId, Context.ConnectionId);
+        }
+
         public override Task OnConnectedAsync()
         {
             return base.OnConnectedAsync();

@@ -39,7 +39,7 @@ namespace ScreenR.Desktop.Shared.Services
                 UsedMemory = GetUsedMemory(totalMemory),
                 TotalMemory = totalMemory,
                 Architecture = RuntimeInformation.OSArchitecture,
-                ComputerName = Environment.MachineName,
+                Name = Environment.MachineName,
                 OperatingSystem = RuntimeInformation.OSDescription,
                 Platform = EnvironmentHelper.Platform,
                 ProcessorCount = Environment.ProcessorCount
@@ -62,7 +62,7 @@ namespace ScreenR.Desktop.Shared.Services
                 UsedMemory = GetUsedMemory(totalMemory),
                 TotalMemory = totalMemory,
                 Architecture = RuntimeInformation.OSArchitecture,
-                ComputerName = Environment.MachineName,
+                Name = Environment.MachineName,
                 OperatingSystem = RuntimeInformation.OSDescription,
                 Platform = EnvironmentHelper.Platform,
                 ProcessorCount = Environment.ProcessorCount

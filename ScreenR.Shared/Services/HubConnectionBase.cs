@@ -14,6 +14,7 @@ namespace ScreenR.Shared.Services
     public class HubConnectionBase
     {
         private static readonly ConcurrentDictionary<Guid, byte[]> _dtoChunks = new();
+
         private readonly ILogger<HubConnectionBase> _logger;
 
         public HubConnectionBase(ILogger<HubConnectionBase> logger)

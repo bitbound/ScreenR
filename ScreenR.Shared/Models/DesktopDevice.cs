@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace ScreenR.Shared.Models
 {
+    [DataContract]
     public class DesktopDevice : Device
     {
         [DataMember]

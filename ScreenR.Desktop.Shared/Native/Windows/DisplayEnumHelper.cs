@@ -29,7 +29,7 @@ using System.Drawing;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace ScreenR.Desktop.Windows.Helpers
+namespace ScreenR.Desktop.Control.Native.Windows
 {
     internal static class DisplaysEnumerationHelper
     {

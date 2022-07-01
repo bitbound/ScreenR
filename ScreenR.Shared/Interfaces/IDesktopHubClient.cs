@@ -11,6 +11,7 @@ namespace ScreenR.Shared.Interfaces
     {
         Task StartDesktopStream(StreamToken streamToken, string passphrase);
         Task RequestWindowsSessions(Guid requestId, string requesterConnectionId);
+        Task GetDisplays(Guid requestId, string requesterConnectionId);
     }
 
 }

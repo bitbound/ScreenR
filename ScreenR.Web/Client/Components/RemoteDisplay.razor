@@ -3,10 +3,47 @@
 @using System.Runtime.InteropServices
 @inject IJSRuntime JsRuntime
 @inject IUserHubConnection UserHub
+@inject IToastService Toasts
 
-<div class="display-wrapper @Class">
-    <div class="title-bar">
+<div class="display-wrapper bg-dark @($"{_windowState}".ToLower()) @Class">
+    <div class="title-bar p-2">
+        <div style="align-self: center">
+            <strong>
+                @(Session?.DeviceName)
+            </strong>
+        </div>
+        <div class="text-end" style="white-space: nowrap">
+            @if (_windowState != WindowState.Minimized)
+            {
+                <button title="Minimize" 
+                        class="btn btn-secondary pointer mr-2"
+                        @onclick="@(() => _windowState = WindowState.Minimized)">
+                    <span class="oi oi-minus" />
+                </button>
+            }
 
+            @if (_windowState != WindowState.Restored)
+            {
+                <button title="Restore" 
+                        class="btn btn-secondary pointer mr-2"
+                        @onclick="@(() => _windowState = WindowState.Restored)">
+                    <span class="oi oi-fullscreen-exit" />
+                </button>
+            }
+            
+            @if (_windowState != WindowState.Maximized)
+            {
+                <button title="Maximize" 
+                        class="btn btn-secondary pointer mr-2"
+                        @onclick="@(() => _windowState = WindowState.Maximized)">
+                    <span class="oi oi-fullscreen-enter" />
+                </button>
+            }
+
+            <button class="btn btn-secondary pointer" title="Close">
+                <span class="oi oi-x" />
+            </button>
+        </div>
     </div>
     <div class="content-area">
         <canvas id="desktopCanvas" 
@@ -19,10 +56,12 @@
 
 @code {
     private readonly Guid _desktopId = Guid.NewGuid();
-    private IEnumerable<DisplayInfo> _displays = Enumerable.Empty<DisplayInfo>();
+    private IEnumerable<DisplayDto> _displays = Enumerable.Empty<DisplayDto>();
+    private DisplayDto? _selectedDisplay;
     private int _canvasWidth = 0;
     private int _canvasHeight = 0;
     private string _canvasClass = "fit";
+    private WindowState _windowState = WindowState.Restored;
 
     private ElementReference _canvasRef;
     private IJSObjectReference? _module;
@@ -43,7 +82,7 @@
         await base.OnAfterRenderAsync(firstRender);
         if (_module is null)
         {
-            _module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/RemoteDesktop.razor.js");
+            _module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/RemoteDisplay.razor.js");
         }
 
         await GetStream(Session.SessionId);
@@ -73,8 +112,24 @@
 
     private async Task GetStream(Guid sessionId)
     {
-        // TODO.
-        //_displays = await UserHub.GetDisplays();
+        var result = await UserHub.GetDisplays(sessionId);
+
+        if (!result.IsSuccess || result.Value is null)
+        {
+            Toasts.ShowToast("Failed to get remote displays", ScreenR.Shared.Enums.MessageLevel.Error);
+            return;
+        }
+
+        _displays = result.Value;
+        _selectedDisplay = _displays.FirstOrDefault(x => x.IsPrimary);
+
+        if (_selectedDisplay is not null)
+        {
+            _canvasWidth = _selectedDisplay.Width;
+            _canvasHeight = _selectedDisplay.Height;
+        }
+
+        await InvokeAsync(StateHasChanged);
 
         var ms = new MemoryStream();
         await foreach (var chunk in UserHub.GetDesktopStream(sessionId, _desktopId))
@@ -89,5 +144,12 @@
                 ms = new();
             }
         }
+    }
+
+    private enum WindowState
+    {
+        Restored,
+        Minimized,
+        Maximized
     }
 }

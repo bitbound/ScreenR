@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.IO;
 using PInvoke;
-using ScreenR.Desktop.Control;
 using ScreenR.Desktop.Control.Interfaces;
-using ScreenR.Desktop.Windows.Helpers;
+using ScreenR.Desktop.Control.Native.Windows;
 using ScreenR.Shared;
 using ScreenR.Shared.Models;
 using SharpDX.Direct3D11;

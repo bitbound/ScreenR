@@ -24,5 +24,11 @@ namespace ScreenR.Shared.Dtos
 
         [DataMember]
         public Guid RequestId { get; init; }
+
+        [DataMember]
+        public Guid ResponseId { get; init; }
+
+        [DataMember]
+        public int SequenceId { get; init; }
     }
 }

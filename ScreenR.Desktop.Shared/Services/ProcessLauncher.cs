@@ -75,8 +75,18 @@ namespace ScreenR.Desktop.Shared.Services
                     default:
                         break;
                     case ScreenR.Shared.Enums.Platform.Windows:
-                        await LaunchDesktopStreamerWindows(serverUrl, requestId, requesterConnectionId);
-                        break;
+                        {
+                            var result = LaunchDesktopStreamerWindows(serverUrl, requestId, requesterConnectionId);
+                            if (!result.IsSuccess)
+                            {
+                                if (result.Exception is not null)
+                                {
+                                    _logger.LogError(result.Exception, "Error while starting desktop app.");
+                                }
+                                _logger.LogError("{msg}", result.Error ?? "Desktop app failed to start.");
+                            }
+                            break;
+                        }
                     case ScreenR.Shared.Enums.Platform.Linux:
                         await LaunchDesktopStreamerLinux(serverUrl, requestId, requesterConnectionId);
                         break;
@@ -95,25 +105,39 @@ namespace ScreenR.Desktop.Shared.Services
             throw new NotImplementedException();
         }
 
-        private async Task LaunchDesktopStreamerWindows(string serverUrl, Guid requestId, string requesterConnectionId)
+        private Result LaunchDesktopStreamerWindows(string serverUrl, Guid requestId, string requesterConnectionId)
         {
-            var filename = "ScreenR.exe";
-            var arguments = $"start -s {serverUrl} -i {requestId}";
-            
-            if (Process.GetCurrentProcess().SessionId == 0)
+            try
             {
-                var result = Win32Interop.LaunchProcessInSession(
-                    $"{filename} {arguments}",
-                    -1,
-                    false,
-                    "Default",
-                    true,
-                    out var procInfo);
+                var filename = "ScreenR.exe";
+                var arguments = $"start -s {serverUrl} -i {requestId}";
+
+                if (Process.GetCurrentProcess().SessionId == 0)
+                {
+                    var result = Win32Interop.LaunchProcessInSession(
+                        $"{filename} {arguments}",
+                        -1,
+                        false,
+                        "Default",
+                        true,
+                        out _);
+
+                    if (!result)
+                    {
+                        return Result.Fail("Desktp app failed to start.");
+                    }
+                }
+                else
+                {
+                    Process.Start(filename, arguments);
+                }
+                return Result.Ok();
             }
-            else
+            catch (Exception ex)
             {
-                Process.Start(filename, arguments);
+                return Result.Fail(ex);
             }
+
         }
     }
 }

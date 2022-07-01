@@ -4,9 +4,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ScreenR.Desktop.Control.Interfaces;
+using ScreenR.Desktop.Control.Native.Windows;
 using ScreenR.Desktop.Shared.Native.Windows;
 using ScreenR.Desktop.Shared.Services;
 using ScreenR.Shared.Dtos;
+using ScreenR.Shared.Enums;
 using ScreenR.Shared.Extensions;
 using ScreenR.Shared.Helpers;
 using ScreenR.Shared.Interfaces;
@@ -59,6 +61,7 @@ namespace ScreenR.Desktop.Control.Services
 
             _connection.On<StreamToken, string>(nameof(IDesktopHubClient.StartDesktopStream), StartDesktopStream);
             _connection.On<Guid, string>(nameof(IDesktopHubClient.RequestWindowsSessions), RequestWindowsSessions);
+            _connection.On<Guid, string>(nameof(IDesktopHubClient.GetDisplays), GetDisplays);
 
             while (!_appLifetime.ApplicationStopping.IsCancellationRequested)
             {
@@ -90,7 +93,7 @@ namespace ScreenR.Desktop.Control.Services
         private async Task HubConnection_Reconnected(string? arg)
         {
             _deviceInfo = _deviceCreator.CreateDesktop(_appState.DesktopId, true);
-            await _connection.SendAsync("SetDeviceInfo", _deviceInfo);
+            await _connection.InvokeAsync("SetDeviceInfo", _deviceInfo);
             _logger.LogInformation("Reconnected to desktop hub.");
         }
 
@@ -100,35 +103,55 @@ namespace ScreenR.Desktop.Control.Services
             return Task.CompletedTask;
         }
 
+        private async void GetDisplays(Guid requestId, string requesterConnectionId)
+        {
+            switch (EnvironmentHelper.Platform)
+            {
+                case Platform.Windows:
+                    {
+                        var displays = DisplaysEnumerationHelper
+                            .GetDisplays()
+                            .Select(x => new DisplayDto()
+                            {
+                                Top = x.MonitorArea.Top,
+                                Right = x.MonitorArea.Right,
+                                Bottom = x.MonitorArea.Bottom,
+                                Left = x.MonitorArea.Left,
+                                DeviceName = x.DeviceName,
+                                IsPrimary = x.IsPrimary
+                            });
+                        await SendDtoToUser(displays, DtoType.DisplayList, requestId, requesterConnectionId);
+                        break;
+                    }
+                case Platform.Linux:
+                    break;
+                case Platform.Unknown:
+                case Platform.MacOS:
+                case Platform.MacCatalyst:
+                case Platform.Browser:
+                default:
+                    _logger.LogError("Platform not supported.");
+                    await _connection.InvokeAsync("SendToast", "Platform not supported.", MessageLevel.Warning, requesterConnectionId);
+                    break;
+            }
+        }
+
         private async void RequestWindowsSessions(Guid requestId, string requesterConnectionId)
         {
-            if (EnvironmentHelper.Platform != ScreenR.Shared.Enums.Platform.Windows)
+            if (EnvironmentHelper.Platform != Platform.Windows)
             {
                 _logger.LogWarning("Received request for Windows sessions, but platform is {platform}.", EnvironmentHelper.Platform);
                 return;
             }
 
             var sessions = Win32Interop.GetActiveSessions();
-            await SendDtoToUser(DtoType.WindowsSessions, sessions, requestId, requesterConnectionId);
+            await SendDtoToUser(sessions, DtoType.WindowsSessions, requestId, requesterConnectionId);
         }
 
-        private async Task SendDtoToUser(DtoType dtoType, object dto, Guid requestId, string requesterConnectionId)
+        private async Task SendDtoToUser<T>(T dto, DtoType dtoType, Guid requestId, string requesterConnectionId)
         {
-            var serializedDto = MessagePackSerializer.Serialize(dto);
-
-            var chunks = serializedDto.Chunk(50_000).ToArray();
-
-            for (var i = 0; i < chunks.Length; i++)
+            foreach (var wrapper in DtoChunker.ChunkDto(dto, dtoType, requestId))
             {
-                var wrapper = new DtoWrapper()
-                {
-                    DtoChunk = chunks[i],
-                    DtoType = dtoType,
-                    IsFirstChunk = i == 0,
-                    IsLastChunk = i == chunks.Length - 1,
-                    RequestId = requestId
-                };
-
                 await _connection.InvokeAsync("SendDtoToUser", wrapper, requesterConnectionId);
             }
         }

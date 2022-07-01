@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using ScreenR.Shared.Dtos;
 using ScreenR.Shared.Enums;
+using ScreenR.Shared.Helpers;
 using ScreenR.Shared.Interfaces;
 using ScreenR.Shared.Models;
 using ScreenR.Web.Server.Data;
@@ -52,7 +53,11 @@ namespace ScreenR.Web.Server.Hubs
                 device.IsOnline = false;
                 device.LastOnline = DateTimeOffset.Now;
                 device = await UpdateDeviceInDb(device);
-                await _userHubContext.Clients.All.NotifyServiceDeviceUpdated(device);
+
+                foreach (var wrapper in DtoChunker.ChunkDto(device, DtoType.ServiceDeviceUpdated))
+                {
+                    await _userHubContext.Clients.All.ReceiveDto(wrapper);
+                }
             }
 
             await base.OnDisconnectedAsync(exception);
@@ -87,7 +92,11 @@ namespace ScreenR.Web.Server.Hubs
             device = await UpdateDeviceInDb(device);
             _deviceCache.AddServiceDevice(device);
             DeviceInfo = device;
-            await _userHubContext.Clients.All.NotifyServiceDeviceUpdated(device);
+
+            foreach (var wrapper in DtoChunker.ChunkDto(device, DtoType.ServiceDeviceUpdated))
+            {
+                await _userHubContext.Clients.All.ReceiveDto(wrapper);
+            }
         }
 
         private async Task<ServiceDevice> UpdateDeviceInDb(ServiceDevice device)

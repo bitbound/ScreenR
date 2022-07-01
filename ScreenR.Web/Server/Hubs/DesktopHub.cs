@@ -2,6 +2,7 @@
 using ScreenR.Shared;
 using ScreenR.Shared.Dtos;
 using ScreenR.Shared.Enums;
+using ScreenR.Shared.Helpers;
 using ScreenR.Shared.Interfaces;
 using ScreenR.Shared.Models;
 using ScreenR.Web.Server.Data;
@@ -57,7 +58,11 @@ namespace ScreenR.Web.Server.Hubs
                 device.LastOnline = DateTimeOffset.Now;
                 _deviceCache.RemoveDesktopDevice(device);
                 device.IsOnline = false;
-                await _userHubContext.Clients.All.NotifyDesktopDeviceUpdated(device);
+
+                foreach (var wrapper in DtoChunker.ChunkDto(device, DtoType.DesktopDeviceUpdated))
+                {
+                    await _userHubContext.Clients.All.ReceiveDto(wrapper);
+                }
             }
             await base.OnDisconnectedAsync(exception);
         }
@@ -88,7 +93,10 @@ namespace ScreenR.Web.Server.Hubs
                     break;
             }
 
-            await _userHubContext.Clients.All.NotifyDesktopDeviceUpdated(device);
+            foreach (var wrapper in DtoChunker.ChunkDto(device, DtoType.DesktopDeviceUpdated))
+            {
+                await _userHubContext.Clients.All.ReceiveDto(wrapper);
+            }
         }
 
         public async Task SendDesktopStream(StreamToken streamToken, IAsyncEnumerable<DesktopFrameChunk> stream)
@@ -105,6 +113,11 @@ namespace ScreenR.Web.Server.Hubs
             {
                 _streamingSessions.TryRemove(session.StreamToken, out _);
             }
+        }
+
+        public async Task SendToast(string message, MessageLevel messageLevel, string userConnectionId)
+        {
+            await _userHubContext.Clients.Client(userConnectionId).ShowToast(message, messageLevel);
         }
 
         internal static async Task<Result<StreamingSession>> GetStreamSession(StreamToken streamToken, TimeSpan timeout)

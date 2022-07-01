@@ -11,8 +11,6 @@ namespace ScreenR.Shared.Interfaces
 {
     public interface IUserHubClient
     {
-        Task NotifyDesktopDeviceUpdated(DesktopDevice device);
-        Task NotifyServiceDeviceUpdated(ServiceDevice device);
         Task ShowToast(string message, MessageLevel messageLevel);
         Task ReceiveDto(DtoWrapper dto);
     }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components.Authorization;
+﻿using MessagePack;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Connections;
@@ -8,6 +9,7 @@ using Microsoft.DotNet.Scaffolding.Shared.Messaging;
 using ScreenR.Shared;
 using ScreenR.Shared.Dtos;
 using ScreenR.Shared.Enums;
+using ScreenR.Shared.Helpers;
 using ScreenR.Shared.Interfaces;
 using ScreenR.Shared.Models;
 using ScreenR.Shared.Services;
@@ -22,6 +24,7 @@ namespace ScreenR.Web.Client.Services
 
         Task Connect();
         IAsyncEnumerable<DesktopFrameChunk> GetDesktopStream(Guid sessionId, Guid requestId, string passphrase = "");
+        Task<Result<List<DisplayDto>>> GetDisplays(Guid sessionId);
         Task RequestDesktopStream(Guid deviceId, Guid requestId);
 
         Task<Result<List<WindowsSession>>> RequestWindowsSessions(Device device);
@@ -88,9 +91,8 @@ namespace ScreenR.Web.Client.Services
             _connection.Reconnecting += HubConnection_Reconnecting;
             _connection.Reconnected += HubConnection_Reconnected;
 
-            _connection.On<DesktopDevice>(nameof(IUserHubClient.NotifyDesktopDeviceUpdated), NotifyDesktopDeviceUpdated);
-            _connection.On<ServiceDevice>(nameof(IUserHubClient.NotifyServiceDeviceUpdated), NotifyServiceDeviceUpdated);
             _connection.On<string, MessageLevel>(nameof(IUserHubClient.ShowToast), ShowToast);
+            _connection.On<DtoWrapper>(nameof(IUserHubClient.ReceiveDto), ReceiveDto);
 
             while (true)
             {
@@ -115,6 +117,46 @@ namespace ScreenR.Web.Client.Services
             }
         }
 
+        private void ReceiveDto(DtoWrapper dto)
+        {
+            try
+            {
+                switch (dto.DtoType)
+                {
+                    case DtoType.DesktopDeviceUpdated:
+                        {
+                            if (DtoChunker.TryComplete<DesktopDevice>(dto, out var device) &&
+                                device is not null)
+                            {
+                                TryInvoke(() => DesktopDeviceUpdated?.Invoke(this, device));
+                            }
+
+                            break;
+                        }
+                    case DtoType.ServiceDeviceUpdated:
+                        {
+                            if (DtoChunker.TryComplete<ServiceDevice>(dto, out var device) &&
+                                device is not null)
+                            {
+                                TryInvoke(() => ServiceDeviceUpdated?.Invoke(this, device));
+                            }
+
+                            break;
+                        }
+                    case DtoType.Unknown:
+                    case DtoType.DesktopFrameChunk:
+                    case DtoType.WindowsSessions:
+                    default:
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while receiving DtoWrapper.");
+            }
+         
+        }
+
         public async IAsyncEnumerable<DesktopFrameChunk> GetDesktopStream(Guid sessionId, Guid requestId, string passphrase = "")
         {
             await foreach (var chunk in _connection.StreamAsync<DesktopFrameChunk>("GetDesktopStream", sessionId, requestId, passphrase))
@@ -123,6 +165,21 @@ namespace ScreenR.Web.Client.Services
             }
         }
 
+        public async Task<Result<List<DisplayDto>>> GetDisplays(Guid sessionId)
+        {
+            var requestId = Guid.NewGuid();
+
+            var result = await WaitForResponse<List<DisplayDto>>(
+                _connection,
+                nameof(IUserHubClient.ReceiveDto),
+                requestId,
+                async () =>
+                {
+                    await _connection.InvokeAsync("GetDisplays", sessionId, requestId);
+                });
+
+            return result;
+        }
         public async Task<Result<List<WindowsSession>>> RequestWindowsSessions(Device device)
         {
             try
@@ -183,22 +240,12 @@ namespace ScreenR.Web.Client.Services
             return Task.CompletedTask;
         }
 
-        private Task NotifyDesktopDeviceUpdated(DesktopDevice device)
-        {
-            TryInvoke(() => DesktopDeviceUpdated?.Invoke(this, device));
-            return Task.CompletedTask;
-        }
-
-        private Task NotifyServiceDeviceUpdated(ServiceDevice device)
-        {
-            TryInvoke(() => ServiceDeviceUpdated?.Invoke(this, device));
-            return Task.CompletedTask;
-        }
         private Task ShowToast(string message, MessageLevel messageLevel)
         {
             _toastService.ShowToast(message, messageLevel);
             return Task.CompletedTask;
         }
+
         private void TryInvoke(Action action)
         {
             try

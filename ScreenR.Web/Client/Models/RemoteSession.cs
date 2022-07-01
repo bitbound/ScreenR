@@ -2,6 +2,7 @@
 {
     public class RemoteSession
     {
-        public Guid SessionId { get; set; }
+        public Guid SessionId { get; init; }
+        public string DeviceName { get; init; } = string.Empty;
     }
 }
