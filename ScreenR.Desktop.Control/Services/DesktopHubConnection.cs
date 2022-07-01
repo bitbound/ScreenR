@@ -14,6 +14,7 @@ using ScreenR.Shared.Helpers;
 using ScreenR.Shared.Interfaces;
 using ScreenR.Shared.Models;
 using ScreenR.Shared.Services;
+using System.Collections.Concurrent;
 
 namespace ScreenR.Desktop.Control.Services
 {
@@ -26,23 +27,24 @@ namespace ScreenR.Desktop.Control.Services
     {
         private readonly IHostApplicationLifetime _appLifetime;
         private readonly IAppState _appState;
+        private readonly IServiceScopeFactory _scopeFactory;
         private readonly HubConnection _connection;
-        private readonly IDesktopStreamer _desktopStreamer;
         private readonly IDeviceCreator _deviceCreator;
         private readonly ILogger<DesktopHubConnection> _logger;
+        private readonly ConcurrentDictionary<StreamToken, IViewerSession> _streamingSessions = new();
         private DesktopDevice _deviceInfo;
 
         public DesktopHubConnection(
             IHostApplicationLifetime appLifetime,
             IAppState appState,
-            IDesktopStreamer desktopStreamer,
+            IServiceScopeFactory scopeFactory,
             IHubConnectionBuilderFactory builderFactory,
             IDeviceCreator deviceCreator,
             ILogger<DesktopHubConnection> logger)
         {
             _appLifetime = appLifetime;
             _appState = appState;
-            _desktopStreamer = desktopStreamer;
+            _scopeFactory = scopeFactory;
             _deviceCreator = deviceCreator;
             _logger = logger;
             _deviceInfo = _deviceCreator.CreateDesktop(appState.DesktopId, true);
@@ -62,6 +64,7 @@ namespace ScreenR.Desktop.Control.Services
             _connection.On<StreamToken, string>(nameof(IDesktopHubClient.StartDesktopStream), StartDesktopStream);
             _connection.On<Guid, string>(nameof(IDesktopHubClient.RequestWindowsSessions), RequestWindowsSessions);
             _connection.On<Guid, string>(nameof(IDesktopHubClient.GetDisplays), GetDisplays);
+            _connection.On<StreamToken>(nameof(IDesktopHubClient.FrameReceived), FrameReceived);
 
             while (!_appLifetime.ApplicationStopping.IsCancellationRequested)
             {
@@ -87,6 +90,14 @@ namespace ScreenR.Desktop.Control.Services
                     _logger.LogError(ex, "Error in desktop hub connection.");
                 }
                 await Task.Delay(3_000, _appLifetime.ApplicationStopping);
+            }
+        }
+
+        private void FrameReceived(StreamToken token)
+        {
+            if (_streamingSessions.TryGetValue(token, out var session))
+            {
+                session.FrameReceived();
             }
         }
 
@@ -164,9 +175,19 @@ namespace ScreenR.Desktop.Control.Services
                 return;
             }
 
-            // TODO: Cancellation token.
-            // TODO: Throttle sender.
-            await _connection.SendAsync("SendDesktopStream", streamToken, _desktopStreamer.GetDesktopStream());
+            using var scope = _scopeFactory.CreateScope();
+            var session = scope.ServiceProvider.GetRequiredService<IViewerSession>();
+            _streamingSessions.AddOrUpdate(streamToken, session, (k, v) =>
+            {
+                v.Stop();
+                return session;
+            });
+
+            _logger.LogInformation("Starting stream for session {sessionId}, request {requestId}.", 
+                streamToken.SessionId, 
+                streamToken.RequestId);
+
+            await _connection.SendAsync("SendDesktopStream", streamToken, session.GetDesktopStream());
         }
         private class RetryPolicy : IRetryPolicy
         {

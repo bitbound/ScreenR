@@ -66,6 +66,7 @@ namespace ScreenR.Desktop.Control
                         services.AddSingleton<IProcessLauncher, ProcessLauncher>();
                         services.AddSingleton<IBitmapUtility, BitmapUtility>();
                         services.AddSingleton<IHubConnectionBuilderFactory, HubConnectionBuilderFactory>();
+                        services.AddTransient<IViewerSession, ViewerSession>();
                         services.AddHostedService<StartupAction>();
                         configureServices?.Invoke(services);
                     })

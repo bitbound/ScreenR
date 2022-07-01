@@ -16,7 +16,6 @@ export async function drawImage(canvas, imageBytes, area) {
     
     let bitmap = await createImageBitmap(new Blob([imageBytes]));
 
-    console.log(area);
     context2D.drawImage(bitmap, 0, 0, area.width, area.height);
 
     return 0;
@@ -29,8 +28,6 @@ export async function drawImageUnmarshalled(imageBytesPtr, areaPtr) {
     let top = Blazor.platform.readInt32Field(areaPtr, 4);
     let width = Blazor.platform.readInt32Field(areaPtr, 8);
     let height = Blazor.platform.readInt32Field(areaPtr, 12);
-
-    console.log(`${left},${top},${width},${height}`);
 
     let canvas = document.getElementById("desktopCanvas");
     let context2D = canvas.getContext("2d");

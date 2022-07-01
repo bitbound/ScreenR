@@ -25,6 +25,8 @@ namespace ScreenR.Web.Client.Services
         Task Connect();
         IAsyncEnumerable<DesktopFrameChunk> GetDesktopStream(Guid sessionId, Guid requestId, string passphrase = "");
         Task<Result<List<DisplayDto>>> GetDisplays(Guid sessionId);
+
+        Task NotifyFrameReceived(Guid sessionId, Guid requestId);
         Task RequestDesktopStream(Guid deviceId, Guid requestId);
 
         Task<Result<List<WindowsSession>>> RequestWindowsSessions(Device device);
@@ -117,46 +119,6 @@ namespace ScreenR.Web.Client.Services
             }
         }
 
-        private void ReceiveDto(DtoWrapper dto)
-        {
-            try
-            {
-                switch (dto.DtoType)
-                {
-                    case DtoType.DesktopDeviceUpdated:
-                        {
-                            if (DtoChunker.TryComplete<DesktopDevice>(dto, out var device) &&
-                                device is not null)
-                            {
-                                TryInvoke(() => DesktopDeviceUpdated?.Invoke(this, device));
-                            }
-
-                            break;
-                        }
-                    case DtoType.ServiceDeviceUpdated:
-                        {
-                            if (DtoChunker.TryComplete<ServiceDevice>(dto, out var device) &&
-                                device is not null)
-                            {
-                                TryInvoke(() => ServiceDeviceUpdated?.Invoke(this, device));
-                            }
-
-                            break;
-                        }
-                    case DtoType.Unknown:
-                    case DtoType.DesktopFrameChunk:
-                    case DtoType.WindowsSessions:
-                    default:
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while receiving DtoWrapper.");
-            }
-         
-        }
-
         public async IAsyncEnumerable<DesktopFrameChunk> GetDesktopStream(Guid sessionId, Guid requestId, string passphrase = "")
         {
             await foreach (var chunk in _connection.StreamAsync<DesktopFrameChunk>("GetDesktopStream", sessionId, requestId, passphrase))
@@ -180,6 +142,17 @@ namespace ScreenR.Web.Client.Services
 
             return result;
         }
+
+        public async Task NotifyFrameReceived(Guid sessionId, Guid requestId)
+        {
+            await _connection.InvokeAsync("NotifyFrameReceived", sessionId, requestId);
+        }
+
+        public async Task RequestDesktopStream(Guid deviceId, Guid requestId)
+        {
+            await _connection.InvokeAsync(nameof(RequestDesktopStream), deviceId, requestId);
+        }
+
         public async Task<Result<List<WindowsSession>>> RequestWindowsSessions(Device device)
         {
             try
@@ -223,11 +196,6 @@ namespace ScreenR.Web.Client.Services
             }
         }
 
-        public async Task RequestDesktopStream(Guid deviceId, Guid requestId)
-        {
-            await _connection.InvokeAsync(nameof(RequestDesktopStream), deviceId, requestId);
-        }
-
         private Task HubConnection_Reconnected(string? arg)
         {
             _logger.LogInformation("Reconnected to user hub.");
@@ -240,6 +208,45 @@ namespace ScreenR.Web.Client.Services
             return Task.CompletedTask;
         }
 
+        private void ReceiveDto(DtoWrapper dto)
+        {
+            try
+            {
+                switch (dto.DtoType)
+                {
+                    case DtoType.DesktopDeviceUpdated:
+                        {
+                            if (DtoChunker.TryComplete<DesktopDevice>(dto, out var device) &&
+                                device is not null)
+                            {
+                                TryInvoke(() => DesktopDeviceUpdated?.Invoke(this, device));
+                            }
+
+                            break;
+                        }
+                    case DtoType.ServiceDeviceUpdated:
+                        {
+                            if (DtoChunker.TryComplete<ServiceDevice>(dto, out var device) &&
+                                device is not null)
+                            {
+                                TryInvoke(() => ServiceDeviceUpdated?.Invoke(this, device));
+                            }
+
+                            break;
+                        }
+                    case DtoType.Unknown:
+                    case DtoType.DesktopFrameChunk:
+                    case DtoType.WindowsSessions:
+                    default:
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while receiving DtoWrapper.");
+            }
+         
+        }
         private Task ShowToast(string message, MessageLevel messageLevel)
         {
             _toastService.ShowToast(message, messageLevel);

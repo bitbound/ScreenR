@@ -61,7 +61,7 @@
     private int _canvasWidth = 0;
     private int _canvasHeight = 0;
     private string _canvasClass = "fit";
-    private WindowState _windowState = WindowState.Restored;
+    private WindowState _windowState = WindowState.Maximized;
 
     private ElementReference _canvasRef;
     private IJSObjectReference? _module;
@@ -85,7 +85,10 @@
             _module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/RemoteDisplay.razor.js");
         }
 
-        await GetStream(Session.SessionId);
+        if (firstRender)
+        {
+            await GetStream(Session.SessionId);
+        }
     }
 
     private async Task DrawImage(byte[] imageBytes, Rectangle destinationArea)
@@ -142,6 +145,7 @@
                 DrawImageUnmarshalled(ms.ToArray(), chunk.Area);
                 ms.Dispose();
                 ms = new();
+                await UserHub.NotifyFrameReceived(sessionId, _desktopId);
             }
         }
     }

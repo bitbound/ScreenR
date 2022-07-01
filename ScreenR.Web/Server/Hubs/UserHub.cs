@@ -13,9 +13,8 @@ namespace ScreenR.Web.Server.Hubs
     public class UserHub : Hub<IUserHubClient>
     {
         private readonly IHubContext<DesktopHub, IDesktopHubClient> _desktopHubContext;
-        private readonly IHubContext<ServiceHub, IServiceHubClient> _serviceHubContext;
         private readonly ILogger<UserHub> _logger;
-
+        private readonly IHubContext<ServiceHub, IServiceHubClient> _serviceHubContext;
         public UserHub(
             IHubContext<DesktopHub, IDesktopHubClient> deviceHubContext,
             IHubContext<ServiceHub, IServiceHubClient> serviceHubContext,
@@ -38,6 +37,7 @@ namespace ScreenR.Web.Server.Hubs
 
             if (!result.IsSuccess || result.Value?.Stream is null)
             {
+                _logger.LogError("Failed to get streaming session. Error: {msg]", result.Error);
                 yield break;
             }
 
@@ -51,6 +51,9 @@ namespace ScreenR.Web.Server.Hubs
             finally
             {
                 result.Value.EndSignal.Release();
+                _logger.LogInformation("Streaming session ended for session {sessionId}, request {requestId}.",
+                    sessionId,
+                    requestId);
             }
 
         }
@@ -62,6 +65,12 @@ namespace ScreenR.Web.Server.Hubs
                .GetDisplays(requestId, Context.ConnectionId);
         }
 
+        public async Task NotifyFrameReceived(Guid sessionId, Guid requestId)
+        {
+            await _desktopHubContext.Clients
+              .Groups(sessionId.ToString())
+              .FrameReceived(new StreamToken(sessionId, requestId));
+        }
         public override Task OnConnectedAsync()
         {
             return base.OnConnectedAsync();

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.IO;
 using ScreenR.Desktop.Control.Interfaces;
+using ScreenR.Desktop.Control.Models;
 using ScreenR.Desktop.Control.Services;
 using ScreenR.Shared.Dtos;
 using ScreenR.Shared.Models;
@@ -21,10 +22,14 @@ namespace ScreenR.Desktop.Windows.Capture
         private readonly IScreenGrabber _screenGrabber;
         private readonly ILogger<DesktopStreamer> _logger;
         private readonly IBitmapUtility _bitmapUtility;
+        private readonly SemaphoreSlim _sentFramesSignal = new(10, 10);
         private string _activeDisplay;
         private SKEncodedImageFormat _encodingFormat = SKEncodedImageFormat.Jpeg;
         private int _quality = 75;
         private bool _forceFullscreen = true;
+
+        public event EventHandler? LoopIncremented;
+        public event EventHandler<SentFrame>? FrameSent;
 
         public DesktopStreamer(
             IScreenGrabber screenGrabber,
@@ -43,7 +48,7 @@ namespace ScreenR.Desktop.Windows.Capture
 
         public async IAsyncEnumerable<DesktopFrameChunk> GetDesktopStream(
             [EnumeratorCancellation]
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken)
         {
             var buffer = new byte[50_000];
             SKBitmap currentFrame = new();
@@ -53,9 +58,12 @@ namespace ScreenR.Desktop.Windows.Capture
             {
                 using var encodeStream = _streamManager.GetStream();
                 Rectangle diffArea;
-
+                
                 try
                 {
+
+                    LoopIncremented?.Invoke(this, EventArgs.Empty);
+
                     Array.Clear(buffer);
 
                     previousFrame?.Dispose();
@@ -91,27 +99,28 @@ namespace ScreenR.Desktop.Windows.Capture
                     continue;
                 }
 
-                foreach (var chunk in encodeStream.ToArray().Chunk(50_000))
+                await _sentFramesSignal.WaitAsync(cancellationToken);
+
+                var chunks = encodeStream.ToArray().Chunk(50_000).ToArray();
+                var lastChunk = chunks.Length - 1;
+
+                for (var i = 0; i < chunks.Length; i++)
                 {
+                    var chunk = chunks[i];
+
                     var desktopChunk = new DesktopFrameChunk()
                     {
                         Area = diffArea,
-                        ImageBytes = chunk
+                        ImageBytes = chunk,
+                        EndOfFrame = i == lastChunk
                     };
 
                     yield return desktopChunk;
                 }
 
-                var endChunk = new DesktopFrameChunk()
-                {
-                    EndOfFrame = true,
-                    Area = diffArea
-                };
-
-                yield return endChunk;
-
-                await Task.CompletedTask;
+                FrameSent?.Invoke(this, new(encodeStream.Length));
             }
+            _logger.LogInformation("Streaming ended.");
         }
 
         public IEnumerable<DisplayInfo> GetDisplays()
@@ -122,6 +131,11 @@ namespace ScreenR.Desktop.Windows.Capture
         public void SetActiveDisplay(string deviceName)
         {
             _activeDisplay = deviceName;
+        }
+
+        public void FrameReceived()
+        {
+            _sentFramesSignal.Release();
         }
     }
 }
