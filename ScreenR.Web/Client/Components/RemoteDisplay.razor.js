@@ -5,6 +5,8 @@
     height;
 }
 
+var decoder = new TextDecoder("utf-8");
+
 /**
  * 
  * @param {HTMLCanvasElement} canvas
@@ -21,7 +23,7 @@ export async function drawImage(canvas, imageBytes, area) {
     return 0;
 }
 
-export async function drawImageUnmarshalled(imageBytesPtr, areaPtr) {
+export async function drawImageUnmarshalled(imageBytesPtr, areaPtr, canvasIdPtr) {
     let imageArray = Blazor.platform.toUint8Array(imageBytesPtr);
 
     let left = Blazor.platform.readInt32Field(areaPtr, 0);
@@ -29,7 +31,9 @@ export async function drawImageUnmarshalled(imageBytesPtr, areaPtr) {
     let width = Blazor.platform.readInt32Field(areaPtr, 8);
     let height = Blazor.platform.readInt32Field(areaPtr, 12);
 
-    let canvas = document.getElementById("desktopCanvas");
+    let canvasIdArray = Blazor.platform.toUint8Array(canvasIdPtr);
+    var canvasId = decoder.decode(canvasIdArray);
+    let canvas = document.getElementById(canvasId);
     let context2D = canvas.getContext("2d");
 
     let bitmap = await createImageBitmap(new Blob([imageArray]));

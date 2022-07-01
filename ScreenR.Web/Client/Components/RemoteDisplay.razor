@@ -1,6 +1,7 @@
 ﻿@using System.Drawing
 @using System.Diagnostics
 @using System.Runtime.InteropServices
+@using System.Text
 @inject IJSRuntime JsRuntime
 @inject IUserHubConnection UserHub
 @inject IToastService Toasts
@@ -46,7 +47,7 @@
         </div>
     </div>
     <div class="content-area">
-        <canvas id="desktopCanvas" 
+        <canvas id="@_canvasId" 
             @ref="_canvasRef" 
             width="@_canvasWidth" 
             height="@_canvasHeight"
@@ -56,6 +57,7 @@
 
 @code {
     private readonly Guid _desktopId = Guid.NewGuid();
+    private readonly string _canvasId = $"canvas-{Guid.NewGuid()}";
     private IEnumerable<DisplayDto> _displays = Enumerable.Empty<DisplayDto>();
     private DisplayDto? _selectedDisplay;
     private int _canvasWidth = 0;
@@ -109,8 +111,11 @@
         }
 
         var unmod = (IJSUnmarshalledObjectReference)_module;
-        var result = unmod.InvokeUnmarshalled<byte[], Rectangle, int>("drawImageUnmarshalled", imageBytes, destinationArea);
-        Console.WriteLine(result);
+        unmod.InvokeUnmarshalled<byte[], Rectangle, byte[], int>(
+            "drawImageUnmarshalled", 
+            imageBytes, 
+            destinationArea, 
+            Encoding.UTF8.GetBytes(_canvasId));
     }
 
     private async Task GetStream(Guid sessionId)

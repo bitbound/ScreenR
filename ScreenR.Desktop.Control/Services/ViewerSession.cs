@@ -30,6 +30,7 @@ namespace ScreenR.Desktop.Control.Services
         private readonly IDesktopStreamer _streamer;
         private int _currentFps;
         private double _currentMbps;
+        private DateTimeOffset _lastFrameReceived = Time.Now;
 
         public ViewerSession(IDesktopStreamer streamer, ILogger<ViewerSession> logger)
         {
@@ -41,15 +42,13 @@ namespace ScreenR.Desktop.Control.Services
 
         public void FrameReceived()
         {
+            _lastFrameReceived = Time.Now;
             _streamer.FrameReceived();
         }
 
         public IAsyncEnumerable<DesktopFrameChunk> GetDesktopStream()
         {
-            if (EnvironmentHelper.IsDebug)
-            {
-                _ = Task.Run(LogMetrics);
-            }
+            _ = Task.Run(MonitorStream);
             return _streamer.GetDesktopStream(_cts.Token);
         }
 
@@ -71,31 +70,47 @@ namespace ScreenR.Desktop.Control.Services
             _fpsQueue.Enqueue(Time.Now);
         }
 
-        private async Task LogMetrics()
+        private async Task MonitorStream()
         {
             while (!_cts.Token.IsCancellationRequested)
             {
+                if (Time.Now - _lastFrameReceived > TimeSpan.FromSeconds(10))
+                {
+                    _logger.LogError("Viewer has stopped responding.  Ending stream.");
+                    _cts.Cancel();
+                    break;
+                }
+
                 await Task.Delay(3_000);
 
-                while (_fpsQueue.TryPeek(out var oldestTime) &&
-                    Time.Now - oldestTime > TimeSpan.FromSeconds(1))
+                if (EnvironmentHelper.IsDebug)
                 {
-                    _fpsQueue.TryDequeue(out _);
+                    LogMetrics();
                 }
-                _currentFps = _fpsQueue.Count;
-
-                Debug.WriteLine($"FPS: {_currentFps}");
-
-
-                while (_sentFrames.TryPeek(out var oldestFrame) &&
-                    Time.Now - oldestFrame.Timestamp > TimeSpan.FromSeconds(1))
-                {
-                    _sentFrames.TryDequeue(out _);
-                }
-                _currentMbps = (double)_sentFrames.Sum(x => x.FrameSize) / 1024 / 1024 * 8;
-
-                Debug.WriteLine($"Current Mbps: {_currentMbps}");
+              
             }
+        }
+
+        private void LogMetrics()
+        {
+            while (_fpsQueue.TryPeek(out var oldestTime) &&
+                  Time.Now - oldestTime > TimeSpan.FromSeconds(1))
+            {
+                _fpsQueue.TryDequeue(out _);
+            }
+            _currentFps = _fpsQueue.Count;
+
+            Debug.WriteLine($"FPS: {_currentFps}");
+
+
+            while (_sentFrames.TryPeek(out var oldestFrame) &&
+                Time.Now - oldestFrame.Timestamp > TimeSpan.FromSeconds(1))
+            {
+                _sentFrames.TryDequeue(out _);
+            }
+            _currentMbps = (double)_sentFrames.Sum(x => x.FrameSize) / 1024 / 1024 * 8;
+
+            Debug.WriteLine($"Current Mbps: {_currentMbps}");
         }
     }
 }
