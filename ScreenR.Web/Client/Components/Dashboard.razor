@@ -1,8 +1,10 @@
-﻿@implements IDisposable
+﻿@using ScreenR.Shared.Enums
+@implements IDisposable
 @inject IUserHubConnection UserHub
 @inject IJsInterop JsInterop
 @inject IApiClient ApiClient
 @inject IAppState AppState
+@inject IToastService Toasts
 @inject ILogger<Dashboard> Logger
 
 <h3>Dashboard</h3>
@@ -180,9 +182,6 @@
     #nullable disable
     [CascadingParameter]
     public LoadingSignal Loader { get; init; }
-
-    [Inject]
-    public IToastService Toasts { get; init; }
     #nullable enable
 
     public void Dispose()
@@ -302,25 +301,26 @@
     {
         _showSessionSelect = false;
 
+        var requestId = Guid.NewGuid();
+
         if (device is ServiceDevice serviceDevice)
         {
             using var _ = Loader.Show("Sending request");
-            var requestId = Guid.NewGuid();
-            await UserHub.RequestDesktopStream(serviceDevice.DeviceId, requestId);
-            AppState.RemoteSessions.Add(new RemoteSession()
+            var sessionId = Guid.NewGuid();
+            var result = await UserHub.RequestDesktopStream(serviceDevice.DeviceId, sessionId);
+
+            if (!result)
             {
-                SessionId = requestId,
-                DeviceName = device.Name
-            });
+                Logger.LogError("Stream did not start.");
+                Toasts.ShowToast("Stream failed to start", MessageLevel.Error);
+                return;
+            }
+            AppState.RemoteSessions.Add(new RemoteSession(sessionId, device.Name, requestId));
         }
         else if (device is DesktopDevice desktopDevice)
         {
             using var _ = Loader.Show("Getting stream");
-            AppState.RemoteSessions.Add(new RemoteSession()
-            {
-                SessionId = desktopDevice.SessionId,
-                DeviceName = device.Name
-            });
+            AppState.RemoteSessions.Add(new RemoteSession(desktopDevice.SessionId, device.Name, requestId));
         }
         else
         {

@@ -6,22 +6,26 @@ using ScreenR.Shared.Enums;
 using ScreenR.Shared.Interfaces;
 using ScreenR.Shared.Models;
 using ScreenR.Web.Server.Data;
+using ScreenR.Web.Server.Services;
 
 namespace ScreenR.Web.Server.Hubs
 {
     [Authorize]
     public class UserHub : Hub<IUserHubClient>
     {
+        private readonly IDeviceConnectionsCache _connectionCache;
         private readonly IHubContext<DesktopHub, IDesktopHubClient> _desktopHubContext;
         private readonly ILogger<UserHub> _logger;
         private readonly IHubContext<ServiceHub, IServiceHubClient> _serviceHubContext;
         public UserHub(
             IHubContext<DesktopHub, IDesktopHubClient> deviceHubContext,
             IHubContext<ServiceHub, IServiceHubClient> serviceHubContext,
+            IDeviceConnectionsCache connectionsCache,
             ILogger<UserHub> logger)
         {
             _desktopHubContext = deviceHubContext;
             _serviceHubContext = serviceHubContext;
+            _connectionCache = connectionsCache;
             _logger = logger;
         }
 
@@ -37,7 +41,7 @@ namespace ScreenR.Web.Server.Hubs
 
             if (!result.IsSuccess || result.Value?.Stream is null)
             {
-                _logger.LogError("Failed to get streaming session. Error: {msg]", result.Error);
+                _logger.LogError("Failed to get streaming session. Error: {msg}", result.Error);
                 yield break;
             }
 
@@ -81,11 +85,14 @@ namespace ScreenR.Web.Server.Hubs
             return base.OnDisconnectedAsync(exception);
         }
 
-        public async Task RequestDesktopStream(Guid deviceId, Guid requestId)
+        public async Task<bool> RequestDesktopStream(Guid deviceId, Guid sessionId)
         {
             await _serviceHubContext.Clients
                 .Group(deviceId.ToString())
-                .RequestDesktopStream(requestId, Context.ConnectionId);
+                .RequestDesktopStream(sessionId, Context.ConnectionId);
+
+
+            return await _connectionCache.WaitForDesktopDevice(sessionId, TimeSpan.FromSeconds(30));
         }
 
         public async Task RequestWindowsSessions(ConnectionType connectionType, Guid deviceOrSessionId, Guid requestId)

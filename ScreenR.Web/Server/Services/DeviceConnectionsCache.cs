@@ -1,4 +1,5 @@
-﻿using ScreenR.Shared.Models;
+﻿using ScreenR.Shared.Helpers;
+using ScreenR.Shared.Models;
 using System.Collections.Concurrent;
 
 namespace ScreenR.Web.Server.Services
@@ -11,6 +12,7 @@ namespace ScreenR.Web.Server.Services
         void RemoveDesktopDevice(DesktopDevice device);
         void AddServiceDevice(ServiceDevice device);
         void RemoveServiceDevice(ServiceDevice device);
+        Task<bool> WaitForDesktopDevice(Guid sessionId, TimeSpan timeout);
     }
 
     public class DeviceConnectionsCache : IDeviceConnectionsCache
@@ -46,6 +48,11 @@ namespace ScreenR.Web.Server.Services
         public void RemoveServiceDevice(ServiceDevice device)
         {
             _serviceDevices.TryRemove(device.DeviceId, out _);
+        }
+
+        public async Task<bool> WaitForDesktopDevice(Guid sessionId, TimeSpan timeout)
+        {
+            return await WaitHelper.WaitForAsync(() => _desktopDevices.ContainsKey(sessionId), timeout);
         }
     }
 }

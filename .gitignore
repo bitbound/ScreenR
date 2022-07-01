@@ -364,3 +364,4 @@ FodyWeavers.xsd
 /ScreenR.Web/Server/App.db
 ScreenR.Web/Server/App.db-shm
 ScreenR.Web/Server/App.db-wal
+ScreenR.Web/Server/wwwroot/Downloads/ScreenR.exe

@@ -27,8 +27,7 @@ namespace ScreenR.Web.Client.Services
         Task<Result<List<DisplayDto>>> GetDisplays(Guid sessionId);
 
         Task NotifyFrameReceived(Guid sessionId, Guid requestId);
-        Task RequestDesktopStream(Guid deviceId, Guid requestId);
-
+        Task<bool> RequestDesktopStream(Guid deviceId, Guid sessionId);
         Task<Result<List<WindowsSession>>> RequestWindowsSessions(Device device);
     }
 
@@ -148,9 +147,9 @@ namespace ScreenR.Web.Client.Services
             await _connection.InvokeAsync("NotifyFrameReceived", sessionId, requestId);
         }
 
-        public async Task RequestDesktopStream(Guid deviceId, Guid requestId)
+        public async Task<bool> RequestDesktopStream(Guid deviceId, Guid sessionId)
         {
-            await _connection.InvokeAsync(nameof(RequestDesktopStream), deviceId, requestId);
+            return await _connection.InvokeAsync<bool>("RequestDesktopStream", deviceId, sessionId);
         }
 
         public async Task<Result<List<WindowsSession>>> RequestWindowsSessions(Device device)

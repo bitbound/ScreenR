@@ -3,9 +3,9 @@ using ScreenR.Shared.Models;
 
 namespace ScreenR.Web.Server.Models
 {
-    internal class StreamingSession
+    internal class StreamSignaler
     {
-        public StreamingSession(StreamToken streamToken)
+        public StreamSignaler(StreamToken streamToken)
         {
             StreamToken = streamToken;
         }

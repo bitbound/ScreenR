@@ -56,7 +56,6 @@
 </div>
 
 @code {
-    private readonly Guid _desktopId = Guid.NewGuid();
     private readonly string _canvasId = $"canvas-{Guid.NewGuid()}";
     private IEnumerable<DisplayDto> _displays = Enumerable.Empty<DisplayDto>();
     private DisplayDto? _selectedDisplay;
@@ -140,7 +139,7 @@
         await InvokeAsync(StateHasChanged);
 
         var ms = new MemoryStream();
-        await foreach (var chunk in UserHub.GetDesktopStream(sessionId, _desktopId))
+        await foreach (var chunk in UserHub.GetDesktopStream(sessionId, Session.RequestId))
         {
             await ms.WriteAsync(chunk.ImageBytes);
 
@@ -150,7 +149,7 @@
                 DrawImageUnmarshalled(ms.ToArray(), chunk.Area);
                 ms.Dispose();
                 ms = new();
-                await UserHub.NotifyFrameReceived(sessionId, _desktopId);
+                await UserHub.NotifyFrameReceived(sessionId, Session.RequestId);
             }
         }
     }

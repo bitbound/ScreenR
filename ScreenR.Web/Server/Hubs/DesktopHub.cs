@@ -15,7 +15,7 @@ namespace ScreenR.Web.Server.Hubs
 
     public class DesktopHub : Hub<IDesktopHubClient>
     {
-        private static readonly ConcurrentDictionary<StreamToken, StreamingSession> _streamingSessions = new();
+        private static readonly ConcurrentDictionary<StreamToken, StreamSignaler> _streamingSessions = new();
         private readonly IHubContext<UserHub, IUserHubClient> _userHubContext;
         private readonly IDeviceConnectionsCache _deviceCache;
         private readonly ILogger<DesktopHub> _logger;
@@ -101,7 +101,7 @@ namespace ScreenR.Web.Server.Hubs
 
         public async Task SendDesktopStream(StreamToken streamToken, IAsyncEnumerable<DesktopFrameChunk> stream)
         {
-            var session = _streamingSessions.GetOrAdd(streamToken, key => new StreamingSession(streamToken));
+            var session = _streamingSessions.GetOrAdd(streamToken, key => new StreamSignaler(streamToken));
 
             try
             {
@@ -120,19 +120,19 @@ namespace ScreenR.Web.Server.Hubs
             await _userHubContext.Clients.Client(userConnectionId).ShowToast(message, messageLevel);
         }
 
-        internal static async Task<Result<StreamingSession>> GetStreamSession(StreamToken streamToken, TimeSpan timeout)
+        internal static async Task<Result<StreamSignaler>> GetStreamSession(StreamToken streamToken, TimeSpan timeout)
         {
-            var session = _streamingSessions.GetOrAdd(streamToken, key => new StreamingSession(streamToken));
+            var session = _streamingSessions.GetOrAdd(streamToken, key => new StreamSignaler(streamToken));
             var waitResult = await session.ReadySignal.WaitAsync(timeout);
 
             if (!waitResult)
             {
-                return Result.Fail<StreamingSession>("Timed out while waiting for session.");
+                return Result.Fail<StreamSignaler>("Timed out while waiting for session.");
             }
 
             if (session.Stream is null)
             {
-                return Result.Fail<StreamingSession>("Stream failed to start.");
+                return Result.Fail<StreamSignaler>("Stream failed to start.");
             }
 
             return Result.Ok(session);
