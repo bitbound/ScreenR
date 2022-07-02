@@ -109,12 +109,20 @@
             return;
         }
 
+        var drawInfo = new DrawUnmarshalledInfo()
+            {
+                CanvasId = _canvasId,
+                Left = destinationArea.Left,
+                Top = destinationArea.Top,
+                Width = destinationArea.Width,
+                Height = destinationArea.Height
+            };
+
         var unmod = (IJSUnmarshalledObjectReference)_module;
-        unmod.InvokeUnmarshalled<byte[], Rectangle, byte[], int>(
+        unmod.InvokeUnmarshalled<byte[], DrawUnmarshalledInfo, int>(
             "drawImageUnmarshalled", 
             imageBytes, 
-            destinationArea, 
-            Encoding.UTF8.GetBytes(_canvasId));
+            drawInfo);
     }
 
     private async Task GetStream(Guid sessionId)
