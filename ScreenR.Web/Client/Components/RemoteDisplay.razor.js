@@ -9,7 +9,7 @@ class DrawUnmarshalledInfo extends Rectangle {
     canvasId;
 }
 
-var decoder = new TextDecoder("utf-8");
+const remoteDisplays = {};
 
 /**
  * 
@@ -44,4 +44,54 @@ export async function drawImageUnmarshalled(imageBytesPtr, drawInfo) {
     context2D.drawImage(bitmap, left, top, width, height);
     
     return imageArray.byteLength;
+}
+
+/**
+ * Retains a reference to the RemoteDisplay Blazor component and registers
+ * event handlers for the canvas.
+ * @param {any} remoteDisplayRef
+ * @param {string} canvasId
+ */
+export async function setRemoteDisplay(remoteDisplayRef, canvasId) {
+    let canvas = document.getElementById(canvasId);
+    let touchCount = 0;
+
+    canvas.addEventListener("touchstart", ev => {
+        touchCount = ev.touches.length;
+    });
+
+    canvas.addEventListener("touchend", ev => {
+        touchCount = ev.touches.length;
+    });
+
+    canvas.addEventListener("pointermove", ev => {
+        if (ev.pointerType == "touch") {
+
+        }
+        else {
+
+        }
+    });
+
+    canvas.addEventListener("pointerdown", ev => {
+        if (ev.pointerType == "touch") {
+
+        }
+        else {
+
+        }
+    });
+
+    canvas.addEventListener("pointerup", ev => {
+        if (ev.pointerType == "touch") {
+
+        }
+        else {
+
+        }
+    });
+
+    canvas.addEventListener("contextmenu", ev => {
+        ev.preventDefault();
+    });
 }

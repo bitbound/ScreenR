@@ -47,6 +47,7 @@ namespace ScreenR.Desktop.Shared.Native.Windows
             return User32.OpenInputDesktop(User32.DesktopCreationFlags.None, true, Kernel32.ACCESS_MASK.GenericRight.GENERIC_ALL);
         }
 
+        // Derived from https://www.codeproject.com/Articles/35773/Subverting-Vista-UAC-in-Both-32-and-64-bit-Archite
         public static bool LaunchProcessInSession(
             string commandLine,
             int targetSessionId,
@@ -96,32 +97,22 @@ namespace ScreenR.Desktop.Shared.Native.Windows
                     return false;
                 }
 
-
-                // Security attibute structure used in DuplicateTokenEx and CreateProcessAsUser.
                 var sa = Kernel32.SECURITY_ATTRIBUTES.Create();
                 sa.nLength = Marshal.SizeOf(sa);
                 var saPtr = Marshal.AllocHGlobal(sa.nLength);
                 Marshal.StructureToPtr(sa, saPtr, false);
 
-                // Copy the access token of the winlogon process; the newly created token will be a primary token.
                 if (!AdvApi32.DuplicateTokenEx(hPToken, 0x02000000, saPtr, Kernel32.SECURITY_IMPERSONATION_LEVEL.SecurityIdentification, AdvApi32.TOKEN_TYPE.TokenPrimary, out var duplicatedToken))
                 {
                     Kernel32.CloseHandle(hProcess);
                     return false;
                 }
 
-                // By default, CreateProcessAsUser creates a process on a non-interactive window station, meaning
-                // the window station has a desktop that is invisible and the process is incapable of receiving
-                // user input. To remedy this we set the lpDesktop parameter to indicate we want to enable user 
-                // interaction with the new process.
-
                 var desktopPtr = Marshal.StringToHGlobalAnsi($@"winsta0\{desktopName}");
                 var si = Kernel32.STARTUPINFO.Create();
                 si.cb = Marshal.SizeOf(si);
                 si.lpDesktop_IntPtr = desktopPtr;
 
-
-                // Flags that specify the priority and creation method of the process.
                 Kernel32.CreateProcessFlags dwCreationFlags;
                 if (hiddenWindow)
                 {
@@ -140,8 +131,7 @@ namespace ScreenR.Desktop.Shared.Native.Windows
                         Kernel32.CreateProcessFlags.CREATE_UNICODE_ENVIRONMENT |
                         Kernel32.CreateProcessFlags.CREATE_NEW_CONSOLE;
                 }
-
-                // Create a new process in the current user's logon session.
+                
                 bool result = Kernel32.CreateProcessAsUser(
                     duplicatedToken.DangerousGetHandle(),
                     null,
@@ -155,8 +145,6 @@ namespace ScreenR.Desktop.Shared.Native.Windows
                     ref si,
                     out procInfo);
 
-
-                // Invalidate the handles.
                 Kernel32.CloseHandle(hProcess);
                 Kernel32.CloseHandle(desktopPtr);
                 Kernel32.CloseHandle(saPtr);

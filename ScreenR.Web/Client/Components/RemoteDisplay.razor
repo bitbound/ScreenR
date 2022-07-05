@@ -2,6 +2,7 @@
 @using System.Diagnostics
 @using System.Runtime.InteropServices
 @using System.Text
+@implements IDisposable
 @inject IJSRuntime JsRuntime
 @inject IUserHubConnection UserHub
 @inject IToastService Toasts
@@ -57,11 +58,12 @@
 
 @code {
     private readonly string _canvasId = $"canvas-{Guid.NewGuid()}";
+    private DotNetObjectReference<RemoteDisplay>? _componentRef;
     private IEnumerable<DisplayDto> _displays = Enumerable.Empty<DisplayDto>();
-    private DisplayDto? _selectedDisplay;
     private int _canvasWidth = 0;
     private int _canvasHeight = 0;
     private string _canvasClass = "fit";
+    private DisplayDto? _selectedDisplay;
     private WindowState _windowState = WindowState.Maximized;
 
     private ElementReference _canvasRef;
@@ -77,6 +79,16 @@
 
     #nullable enable
 
+    public void Dispose()
+    {
+        _componentRef?.Dispose();
+    }
+
+    [JSInvokable]
+    public async Task SendPointerMove(double xPercent, double yPercent)
+    {
+        
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -88,6 +100,8 @@
 
         if (firstRender)
         {
+            _componentRef = DotNetObjectReference.Create(this);
+            await _module.InvokeVoidAsync("setRemoteDisplay", _componentRef, _canvasId);
             await GetStream(Session.SessionId);
         }
     }

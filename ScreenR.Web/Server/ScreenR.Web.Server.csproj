@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>ScreenR.Web.Server-533D5A78-A340-4826-B5FE-4B5565ECA7C5</UserSecretsId>
+    <AssemblyName>ScreenR_Server</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
