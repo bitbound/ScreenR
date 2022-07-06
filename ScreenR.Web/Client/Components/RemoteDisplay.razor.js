@@ -1,15 +1,28 @@
 ﻿class Rectangle {
+    /**
+     * @type {number}
+     */
     top;
+
+    /**
+     * @type {number}
+     */
     left;
+
+    /**
+     * @type {number}
+     */
     width;
+
+    /**
+     * @type {number}
+     */
     height;
 }
 
 class DrawUnmarshalledInfo extends Rectangle {
     canvasId;
 }
-
-const remoteDisplays = {};
 
 /**
  * 
@@ -22,7 +35,7 @@ export async function drawImage(canvas, imageBytes, area) {
     
     let bitmap = await createImageBitmap(new Blob([imageBytes]));
 
-    context2D.drawImage(bitmap, 0, 0, area.width, area.height);
+    context2D.drawImage(bitmap, area.left, area.top, area.width, area.height);
 
     return 0;
 }
