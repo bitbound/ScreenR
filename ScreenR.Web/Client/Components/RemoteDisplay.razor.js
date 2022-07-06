@@ -63,10 +63,10 @@ export async function setRemoteDisplay(remoteDisplayRef, canvasId) {
     canvas.addEventListener("touchend", ev => {
         touchCount = ev.touches.length;
     });
-
+    // TODO
     canvas.addEventListener("pointermove", ev => {
         if (ev.pointerType == "touch") {
-
+            
         }
         else {
 
