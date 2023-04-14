@@ -6,6 +6,7 @@
 @inject IJSRuntime JsRuntime
 @inject IUserHubConnection UserHub
 @inject IToastService Toasts
+@inject IAppState AppState
 
 <div class="display-wrapper bg-dark @($"{_windowState}".ToLower()) @Class">
     <div class="title-bar p-2">
@@ -42,7 +43,7 @@
                 </button>
             }
 
-            <button class="btn btn-secondary pointer" title="Close">
+            <button class="btn btn-secondary pointer" title="Close" @onclick="Close">
                 <span class="oi oi-x" />
             </button>
         </div>
@@ -104,6 +105,11 @@
             await _module.InvokeVoidAsync("setRemoteDisplay", _componentRef, _canvasId);
             await GetStream(Session.SessionId);
         }
+    }
+
+    private void Close()
+    {
+        AppState.RemoteSessions.Remove(Session);
     }
 
     private async Task DrawImage(byte[] imageBytes, Rectangle destinationArea)
